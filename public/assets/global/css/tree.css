@@ -79,6 +79,16 @@
 .tree-wrapper {
     overflow-x: auto;
     padding: 30px 15px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tree-layout {
+    min-width: 760px;
+    padding: 10px 12px 24px;
+}
+
+.tree-layout .row {
+    flex-wrap: nowrap;
 }
 
 .hierarchy-tree,
@@ -176,6 +186,16 @@
 }
 
 @media (max-width: 767px) {
+    .tree-wrapper {
+        margin-inline: -12px;
+        padding: 20px 12px 10px;
+    }
+
+    .tree-layout {
+        min-width: 700px;
+        padding: 0 12px 16px;
+    }
+
     .hierarchy-tree,
     .hierarchy-tree ul {
         gap: 18px 6px;
@@ -269,6 +289,10 @@
 }
 
 @media (max-width: 575px) {
+    .tree-layout {
+        min-width: 640px;
+    }
+
     .user {
         line-height: 0;
         position: relative;
@@ -333,6 +357,10 @@
     }
 }
 @media (max-width: 400px) {
+    .tree-layout {
+        min-width: 580px;
+    }
+
     .user {
         line-height: 0;
         position: relative;
@@ -392,11 +420,6 @@
     .w-8 .line {
         height: 0;
     }
-    .card {
-        padding: 30px;
-        margin: 0 -30px;
-    }
-
 }
 
 .user::before {
@@ -475,4 +498,96 @@
 img {
     max-width: 100%;
     height: 100%;
+}
+
+@media (max-width: 767px) {
+    .tree-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 16px 8px 8px;
+        margin: 0;
+    }
+
+    .tree-layout {
+        min-width: 860px;
+        padding: 0 12px 20px;
+    }
+
+    .tree-layout .llll {
+        flex-wrap: nowrap !important;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .tree-layout .w-1,
+    .tree-layout .w-2,
+    .tree-layout .w-4,
+    .tree-layout .w-8 {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .w-1 .user,
+    .w-1 .user img {
+        width: 88px;
+        height: 88px;
+    }
+
+    .w-2 .user,
+    .w-2 .user img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .w-4 .user,
+    .w-4 .user img {
+        width: 72px;
+        height: 72px;
+    }
+
+    .w-8 .user,
+    .w-8 .user img {
+        width: 64px;
+        height: 64px;
+    }
+
+    .user::before {
+        display: none;
+    }
+
+    .user .user-name {
+        display: block;
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    .line {
+        transform: none;
+        width: 50%;
+        height: 56px;
+        margin-top: 0;
+    }
+
+    .w-4 .line,
+    .w-8 .line {
+        transform: none;
+        width: 50%;
+        height: 56px;
+        margin-top: 0;
+    }
+
+    .w-8 {
+        transform: none;
+    }
+
+    .tree-node-info {
+        top: -4px;
+        right: 0;
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
 }

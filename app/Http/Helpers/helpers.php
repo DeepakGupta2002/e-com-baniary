@@ -728,7 +728,7 @@ function showSingleUserinTree($user)
         $extraData .= " data-rfree=\"" . @$user->userExtra->free_right . "\"";
         $extraData .= " data-lbv=\"" . getAmount(@$user->userExtra->bv_left) . "\"";
         $extraData .= " data-rbv=\"" . getAmount(@$user->userExtra->bv_right) . "\"";
-        $res       .= "<div class=\"user showDetails\" type=\"button\" $extraData>";
+        $res       .= "<div class=\"user tree-node-link showDetails\" type=\"button\" data-treeurl=\"$hisTree\" $extraData>";
         $res       .= "<img src=\"$img\" alt=\"*\"  class=\"$userType\">";
         $res       .= "<p class=\"user-name\">$user->username</p>";
     } else {

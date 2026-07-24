@@ -110,8 +110,8 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('my-tree', 'myTree')->name('my.tree');
                 Route::get('referrals', 'myRefLog')->name('my.ref');
                 Route::get('binary-summery', 'binarySummery')->name('binary.summery');
-                Route::get('tree/{user}', 'otherTree')->name('other.tree');
                 Route::get('tree/search', 'otherTree')->name('other.tree.search');
+                Route::get('tree/{user}', 'otherTree')->name('other.tree');
             });
         });
 

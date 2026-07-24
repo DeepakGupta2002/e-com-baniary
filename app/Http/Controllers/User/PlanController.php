@@ -143,4 +143,19 @@ class PlanController extends Controller
         $user      = auth()->user();
         return view('Template::user.myTree', compact('pageTitle', 'tree', 'user'));
     }
+
+    public function otherTree(Request $request, $username = null)
+    {
+        $username = $request->username ?: $username;
+        $user     = User::where('username', $username)->first();
+
+        if ($user) {
+            $tree      = showTreePage($user->id);
+            $pageTitle = "Tree of " . $user->fullname;
+            return view('Template::user.myTree', compact('tree', 'pageTitle', 'user'));
+        }
+
+        $notify[] = ['error', 'Tree Not Found !'];
+        return redirect()->route('user.my.tree')->withNotify($notify);
+    }
 }

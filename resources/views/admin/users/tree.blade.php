@@ -2,57 +2,61 @@
 
 @section('panel')
     <div class="card">
-        <div class="row justify-content-center llll text-center">
-            <div class="w-1">
-                @php echo showSingleUserinTree($tree['a']); @endphp
-            </div>
-        </div>
-        <div class="row justify-content-center llll text-center">
-            <div class="w-2">
-                @php echo showSingleUserinTree($tree['b']); @endphp
-            </div>
-            <div class="w-2">
-                @php echo showSingleUserinTree($tree['c']); @endphp
-            </div>
-        </div>
-        <div class="row justify-content-center llll text-center">
-            <div class="w-4">
-                @php echo showSingleUserinTree($tree['d']); @endphp
-            </div>
-            <div class="w-4">
-                @php echo showSingleUserinTree($tree['e']); @endphp
-            </div>
-            <div class="w-4">
-                @php echo showSingleUserinTree($tree['f']); @endphp
-            </div>
-            <div class="w-4">
-                @php echo showSingleUserinTree($tree['g']); @endphp
-            </div>
-        </div>
-        <div class="row justify-content-center llll text-center">
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['h']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['i']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['j']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['k']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['l']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['m']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['n']); @endphp
-            </div>
-            <div class="w-8">
-                @php echo showSingleUserinTree($tree['o']); @endphp
+        <div class="tree-wrapper">
+            <div class="tree-layout">
+                <div class="row justify-content-center llll text-center">
+                    <div class="w-1">
+                        @php echo showSingleUserinTree($tree['a']); @endphp
+                    </div>
+                </div>
+                <div class="row justify-content-center llll text-center">
+                    <div class="w-2">
+                        @php echo showSingleUserinTree($tree['b']); @endphp
+                    </div>
+                    <div class="w-2">
+                        @php echo showSingleUserinTree($tree['c']); @endphp
+                    </div>
+                </div>
+                <div class="row justify-content-center llll text-center">
+                    <div class="w-4">
+                        @php echo showSingleUserinTree($tree['d']); @endphp
+                    </div>
+                    <div class="w-4">
+                        @php echo showSingleUserinTree($tree['e']); @endphp
+                    </div>
+                    <div class="w-4">
+                        @php echo showSingleUserinTree($tree['f']); @endphp
+                    </div>
+                    <div class="w-4">
+                        @php echo showSingleUserinTree($tree['g']); @endphp
+                    </div>
+                </div>
+                <div class="row justify-content-center llll text-center">
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['h']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['i']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['j']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['k']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['l']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['m']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['n']); @endphp
+                    </div>
+                    <div class="w-8">
+                        @php echo showSingleUserinTree($tree['o']); @endphp
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -112,27 +116,64 @@
     <script>
         'use strict';
         (function($) {
-            $('.showDetails').on('click', function() {
-                $('.tree_name').text($(this).data('name'));
+            const clickDelay = 250;
+            let clickTimer = null;
+            let lastTap = 0;
+
+            function openTree($node) {
+                const treeUrl = $node.data('treeurl');
+
+                if (treeUrl) {
+                    window.location.href = treeUrl;
+                }
+            }
+
+            function openModal($node) {
+                $('.tree_name').text($node.data('name'));
                 $('.tree_url').attr({
-                    "href": $(this).data('treeurl')
+                    "href": $node.data('treeurl')
                 });
-                $('.tree_status').text($(this).data('status'));
-                $('.tree_plan').text($(this).data('plan'));
+                $('.tree_status').text($node.data('status'));
+                $('.tree_plan').text($node.data('plan'));
                 $('.tree_image').attr({
-                    "src": $(this).data('image')
+                    "src": $node.data('image')
                 });
-                $('.user-details-header').removeClass('Paid');
-                $('.user-details-header').removeClass('Free');
-                $('.user-details-header').addClass($(this).data('status'));
-                $('.tree_ref').text($(this).data('refby'));
-                $('.lbv').text($(this).data('lbv'));
-                $('.rbv').text($(this).data('rbv'));
-                $('.lpaid').text($(this).data('lpaid'));
-                $('.rpaid').text($(this).data('rpaid'));
-                $('.lfree').text($(this).data('lfree'));
-                $('.rfree').text($(this).data('rfree'));
+                $('.user-details-header').removeClass('Paid Free').addClass($node.data('status'));
+                $('.tree_ref').text($node.data('refby'));
+                $('.lbv').text($node.data('lbv'));
+                $('.rbv').text($node.data('rbv'));
+                $('.lpaid').text($node.data('lpaid'));
+                $('.rpaid').text($node.data('rpaid'));
+                $('.lfree').text($node.data('lfree'));
+                $('.rfree').text($node.data('rfree'));
                 $('#exampleModalCenter').modal('show');
+            }
+
+            $('.tree-node-link').on('click touchend', function(e) {
+                if (e.type === 'touchend') {
+                    e.preventDefault();
+                }
+
+                const $node = $(this);
+                const now = Date.now();
+
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+
+                if (now - lastTap < clickDelay) {
+                    lastTap = 0;
+                    openModal($node);
+                    return;
+                }
+
+                lastTap = now;
+                clickTimer = setTimeout(function() {
+                    openTree($node);
+                    clickTimer = null;
+                    lastTap = 0;
+                }, clickDelay);
             });
         })(jQuery)
     </script>
@@ -148,4 +189,10 @@
 
 @push('style')
     <link href="{{ asset('assets/global/css/tree.css') }}" rel="stylesheet">
+    <style>
+        .user.tree-node-link {
+            cursor: pointer;
+            position: relative;
+        }
+    </style>
 @endpush

@@ -83,8 +83,8 @@ Route::middleware('admin')->group(function () {
         Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
 
         Route::get('/tree/{id}', 'tree')->name('single.tree');
-        Route::get('/user/tree/{user?}', 'otherTree')->name('other.tree');
         Route::get('/user/tree/search', 'otherTree')->name('other.tree.search');
+        Route::get('/user/tree/{user?}', 'otherTree')->name('other.tree');
 
         Route::get('referral/{id}', 'userRef')->name('referral');
 
