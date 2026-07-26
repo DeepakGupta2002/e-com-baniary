@@ -436,6 +436,18 @@
 .paid-user {
     border: 5px solid #2ecc71;
 }
+.paid-user.plan-vision-pack {
+    border-color: #1F5E2D;
+}
+.paid-user.plan-gold-pack {
+    border-color: #B67A12;
+}
+.paid-user.plan-premium-pack {
+    border-color: #1E5AA8;
+}
+.paid-user.plan-royal-pack {
+    border-color: #6A267B;
+}
 .free-user {
     border: 5px solid #101536;
 }

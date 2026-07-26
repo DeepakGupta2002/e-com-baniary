@@ -695,6 +695,19 @@ function getPositionUser($id, $position)
     return User::where('pos_id', $id)->where('position', $position)->first();
 }
 
+function getTreePlanBorderClass($planName)
+{
+    $normalizedPlanName = Str::lower(trim((string) $planName));
+
+    return match ($normalizedPlanName) {
+        'vision pack' => 'plan-vision-pack',
+        'gold pack' => 'plan-gold-pack',
+        'premium pack' => 'plan-premium-pack',
+        'royal pack' => 'plan-royal-pack',
+        default => '',
+    };
+}
+
 function showSingleUserinTree($user)
 {
     $res = '';
@@ -704,9 +717,10 @@ function showSingleUserinTree($user)
             $stShow   = "Free";
             $planName = '';
         } else {
-            $userType = "paid-user";
             $stShow   = "Paid";
             $planName = $user->plan->name;
+            $planBorderClass = getTreePlanBorderClass($planName);
+            $userType = trim("paid-user $planBorderClass");
         }
         $img   = getImage('assets/images/user/profile/' . $user->image, '120x120', true);
         $refby = getUserById($user->ref_id)->fullname ?? '';

@@ -19,4 +19,5 @@ yarn-error.log
 /.vscode
 *.sql
 *.zip
+*.md
 public/assets/admin/push_config.json
