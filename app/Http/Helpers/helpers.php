@@ -710,10 +710,13 @@ function showSingleUserinTree($user)
         }
         $img   = getImage('assets/images/user/profile/' . $user->image, '120x120', true);
         $refby = getUserById($user->ref_id)->fullname ?? '';
-        if (auth()->guard('admin')->user()) {
-            $hisTree = route('admin.users.other.tree', $user->username);
-        } else {
-            $hisTree = route('user.other.tree', $user->username);
+        $hisTree = '';
+        if (!empty($user->username)) {
+            if (auth()->guard('admin')->user()) {
+                $hisTree = route('admin.users.other.tree', ['user' => $user->username]);
+            } else {
+                $hisTree = route('user.other.tree', ['user' => $user->username]);
+            }
         }
 
         $extraData  = " data-name=\"$user->fullname\"";
