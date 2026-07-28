@@ -101,39 +101,11 @@
         <div class="col-lg-12 mb-30">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title m-0">@lang('Matching Bonus')</h4>
+                    <h4 class="card-title m-0">@lang('Matching Settings')</h4>
                 </div>
                 <form action="{{ route('admin.users.matching-bonus.update') }}" method="post">
                     <div class="card-body">
                         @csrf
-                        <div class="row justify-content-between">
-                            <div class="col-md-4 form-group">
-                                <div class="input-group">
-                                    <input class="form-control" id="#" name="total_bv" type="number" value="{{ getAmount(gs('total_bv')) }}"
-                                        aria-describedby="#" required="">
-                                    <span class="input-group-text" id="#">@lang('BV')</span>
-                                </div>
-                            </div>
-                            <div class="col-md-1">
-                                <h2 class="text-center">=</h2>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <div class="input-group">
-                                    <input class="form-control" name="bv_price" type="number" value="{{ getAmount(gs('bv_price')) }}"
-                                        aria-describedby="#" step="any" required="">
-                                    <span class="input-group-text" id="#">{{ gs('cur_text') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4">
-                                <div class="input-group">
-                                    <span class="input-group-text">@lang('MAX')</span>
-                                    <input class="form-control" name="max_bv" type="number" value="{{ getAmount(gs('max_bv')) }}"
-                                        aria-label="Amount (to the nearest dollar)">
-                                    <span class="input-group-text">@lang('BV')</span>
-                                </div>
-                            </div>
-                        </div>
                         <div class="row">
                             <div class="form-group col-lg-4">
                                 <label>@lang('Carry / Flush')</label>
@@ -144,7 +116,7 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
-                                <label> @lang('Matching Bonus Time') </label>
+                                <label> @lang('Matching Time') </label>
                                 <select class="form-control select2" name="matching_bonus_time" data-minimum-results-for-search="-1">
                                     <option value="daily">@lang('Daily')</option>
                                     <option value="weekly">@lang('Weekly')</option>
@@ -240,7 +212,7 @@
 
 
 
-            // matching bonus
+            // matching settings
             $("select[name=cary_flash]").val("{{ gs('cary_flash') }}");
             $("select[name=matching_bonus_time]").val("{{ gs('matching_bonus_time') }}");
             $("select[name=weekly_time]").val("{{ gs('matching_when') }}");

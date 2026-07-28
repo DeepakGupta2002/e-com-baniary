@@ -695,6 +695,56 @@ function getPositionUser($id, $position)
     return User::where('pos_id', $id)->where('position', $position)->first();
 }
 
+function commissionRemarksForCapping()
+{
+    return [
+        'referral_commission',
+        'binary_commission',
+    ];
+}
+
+function getCommissionCreditAmountByCapping($user, $amount)
+{
+    if (!$user || $amount <= 0 || !$user->plan_id || !$user->plan) {
+        return 0;
+    }
+
+    $plan = $user->plan;
+    $dailyCap = (float) ($plan->daily_capping ?? 0);
+    $monthlyCap = (float) ($plan->monthly_capping ?? 0);
+
+    if ($dailyCap <= 0 && $monthlyCap <= 0) {
+        return $amount;
+    }
+
+    $remarks = commissionRemarksForCapping();
+    $today = Carbon::today();
+    $monthStart = Carbon::now()->startOfMonth();
+    $monthEnd = Carbon::now()->endOfMonth();
+
+    $dailyEarned = Transaction::where('user_id', $user->id)
+        ->whereIn('remark', $remarks)
+        ->whereDate('created_at', $today)
+        ->sum('amount');
+
+    $monthlyEarned = Transaction::where('user_id', $user->id)
+        ->whereIn('remark', $remarks)
+        ->whereBetween('created_at', [$monthStart, $monthEnd])
+        ->sum('amount');
+
+    $allowedAmount = (float) $amount;
+
+    if ($dailyCap > 0) {
+        $allowedAmount = min($allowedAmount, max(0, $dailyCap - (float) $dailyEarned));
+    }
+
+    if ($monthlyCap > 0) {
+        $allowedAmount = min($allowedAmount, max(0, $monthlyCap - (float) $monthlyEarned));
+    }
+
+    return getAmount(max(0, $allowedAmount), 8);
+}
+
 function getTreePlanBorderClass($planName)
 {
     $normalizedPlanName = Str::lower(trim((string) $planName));
@@ -796,36 +846,8 @@ function updatePaidCount($id)
 
 function treeComission($id, $amount, $details)
 {
-    while ($id != "" || $id != "0") {
-        if (isUserExists($id)) {
-            $posid = getPositionId($id);
-            if ($posid == "0") {
-                break;
-            }
-
-            $posUser = User::find($posid);
-            if ($posUser->plan_id != 0) {
-
-                $posUser->balance          += $amount;
-                $posUser->total_binary_com += $amount;
-                $posUser->save();
-
-                $transaction               = new Transaction();
-                $transaction->amount       = $posUser->id;
-                $transaction->user_id      = $amount;
-                $transaction->charge       = 0;
-                $transaction->trx_type     = '+';
-                $transaction->details      = $details;
-                $transaction->remark       = 'binary_commission';
-                $transaction->trx          = getTrx();
-                $transaction->post_balance = $posUser->balance;
-                $transaction->save();
-            }
-            $id = $posid;
-        } else {
-            break;
-        }
-    }
+    // ORIVA does not use the legacy tree commission payout.
+    return;
 }
 
 
@@ -834,9 +856,19 @@ function referralComission($user_id, $details)
     $user  = User::find($user_id);
     $refer = User::find($user->ref_by);
     if ($refer) {
-        $plan = Plan::find($refer->plan_id);
-        if ($plan) {
-            $amount                = $plan->ref_com;
+        $joiningPlan = Plan::find($user->plan_id);
+        $sponsorPlan = $refer->plan;
+
+        if ($joiningPlan && $sponsorPlan) {
+            // ORIVA direct income uses the sponsor's active plan percentage on the joining plan amount.
+            $referralPercentage = (float) ($sponsorPlan->ref_com ?? 0);
+            $amount = getAmount(((float) $joiningPlan->price) * ($referralPercentage / 100), 8);
+            $amount = getCommissionCreditAmountByCapping($refer, $amount);
+
+            if ($amount <= 0) {
+                return;
+            }
+
             $refer->balance       += $amount;
             $refer->total_ref_com += $amount;
             $refer->save();

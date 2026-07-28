@@ -70,10 +70,6 @@ class PlanController extends Controller
 
         updateBV($user->id, $plan->bv, $details);
 
-        if ($plan->tree_com > 0) {
-            treeComission($user->id, $plan->tree_com, $details);
-        }
-
         referralComission($user->id, $details);
 
         $notify[] = ['success', 'Purchased ' . $plan->name . ' successfully'];

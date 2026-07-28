@@ -17,13 +17,25 @@
                                 </li>
                                 <li>
                                     <i class="las la-comment-dollar __plan_info text--primary" data="ref_com"></i><span> @lang('Referral Commission'):
-                                        {{ gs('cur_sym') }}{{ getAmount($data->ref_com) }}
+                                        {{ getAmount($data->ref_com) }}%
                                     </span>
                                 </li>
                                 <li>
                                     <i class="las la-comments-dollar __plan_info text--primary" data="tree_com"></i>
-                                    <span>@lang('Tree Commission'):
-                                        {{ gs('cur_sym') }}{{ getAmount($data->tree_com) }}
+                                    <span>@lang('Matching Income'):
+                                        {{ getAmount($data->tree_com) }}%
+                                    </span>
+                                </li>
+                                <li>
+                                    <i class="las la-wallet text--primary"></i>
+                                    <span>@lang('Daily Capping'):
+                                        {{ gs('cur_sym') }}{{ getAmount($data->daily_capping) }}
+                                    </span>
+                                </li>
+                                <li>
+                                    <i class="las la-calendar-alt text--primary"></i>
+                                    <span>@lang('Monthly Capping'):
+                                        {{ gs('cur_sym') }}{{ getAmount($data->monthly_capping) }}
                                     </span>
                                 </li>
                             </ul>
@@ -47,7 +59,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="plan_info_modal_title">@lang('Commission to tree info')</h5>
+                    <h5 class="modal-title" id="plan_info_modal_title">@lang('Plan Info')</h5>
                 </div>
                 <div class="modal-body">
                 </div>
@@ -104,17 +116,16 @@
 
                 }
                 if (data == 'ref_com') {
-                    html = `  <h5>  <span class=" text--danger">@lang('When Your Direct-Referred/Sponsored  User Subscribe in') <b> @lang('ANY PLAN') </b>, @lang('You will get this amount').</span>
+                    html = `  <h5>  <span class=" text--danger">@lang('When your direct sponsored user purchases this plan, you receive this percentage of the package amount as referral income.').</span>
                         <br>
                         <br>
-                        <span class="text--success"> @lang('This is the reason You should Choose a Plan With Bigger Referral Commission').</span> </h5>`
+                        <span class="text--success"> @lang('Example: 10% on a 2500 package pays 250 as direct referral income.').</span> </h5>`
                     modal.find('#plan_info_modal_title').html("@lang('Referral Commission info')")
 
                 }
                 if (data == 'tree_com') {
-                    html = ` <h5 class=" text--danger">@lang('When someone from your below tree subscribe this plan, You will get this amount as Tree Commission'). </h5>`
-                    modal.find('#plan_info_modal_title').html("@lang('Referral Commission info')")
-
+                    html = ` <h5 class=" text--danger">@lang('Binary matching income is calculated from your matched left and right BV using this percentage from your active plan.'). </h5>`
+                    modal.find('#plan_info_modal_title').html("@lang('Matching Income info')")
                 }
                 modal.find('.modal-body').html(html)
                 $(modal).modal('show')

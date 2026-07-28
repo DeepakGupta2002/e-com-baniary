@@ -557,12 +557,6 @@ class ManageUsersController extends Controller
 
     public function matchingUpdate(Request $request)
     {
-        $request->validate([
-            'bv_price' => 'required|min:0',
-            'total_bv' => 'required|min:0|integer',
-            'max_bv'   => 'required|min:0|integer',
-        ]);
-
         if ($request->matching_bonus_time == 'daily') {
             $when = $request->daily_time;
         } elseif ($request->matching_bonus_time == 'weekly') {
@@ -572,15 +566,12 @@ class ManageUsersController extends Controller
         }
 
         $setting                      = gs();
-        $setting->bv_price            = $request->bv_price;
-        $setting->total_bv            = $request->total_bv;
-        $setting->max_bv              = $request->max_bv;
         $setting->cary_flash          = $request->cary_flash;
         $setting->matching_bonus_time = $request->matching_bonus_time;
         $setting->matching_when       = $when;
         $setting->save();
 
-        $notify[] = ['success', 'Matching bonus has been updated.'];
+        $notify[] = ['success', 'Matching settings have been updated.'];
         return back()->withNotify($notify);
     }
 }

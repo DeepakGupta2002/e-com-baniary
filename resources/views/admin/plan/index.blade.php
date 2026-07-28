@@ -11,8 +11,10 @@
                                     <th>@lang('Name')</th>
                                     <th>@lang('Price')</th>
                                     <th>@lang('Business Volume (BV)')</th>
-                                    <th>@lang('Referral Commission')</th>
-                                    <th>@lang('Tree Commission')</th>
+                                    <th>@lang('Referral Commission (%)')</th>
+                                    <th>@lang('Matching Income (%)')</th>
+                                    <th>@lang('Daily Capping')</th>
+                                    <th>@lang('Monthly Capping')</th>
                                     <th>@lang('Status')</th>
                                     <th>@lang('Action')</th>
                                 </tr>
@@ -24,8 +26,10 @@
                                         <td>{{ __($plan->name) }}</td>
                                         <td>{{ showAmount($plan->price) }}</td>
                                         <td>{{ $plan->bv }}</td>
-                                        <td> {{ showAmount($plan->ref_com) }}</td>
-                                        <td> {{ showAmount($plan->tree_com) }}</td>
+                                        <td> {{ getAmount($plan->ref_com) }}%</td>
+                                        <td> {{ getAmount($plan->tree_com) }}%</td>
+                                        <td> {{ showAmount($plan->daily_capping) }}</td>
+                                        <td> {{ showAmount($plan->monthly_capping) }}</td>
                                         <td>@php echo $plan->statusBadge @endphp </td>
                                         <td>
                                             <div class="button--group">
@@ -98,29 +102,39 @@
                                 <input class="form-control" name="bv" type="number" min="0" required value="{{ old('bv') }}">
                             </div>
                             <div class="form-group col-sm-6">
-                                <label class="font-weight-bold"> @lang('Referral Commission')
-                                    <span data-bs-toggle="tooltip" data-bs-title="@lang('If a user who subscribed to this plan, refers someone and if the referred user buys a plan, then he will get this amount.')">
+                                <label class="font-weight-bold"> @lang('Referral Commission (%)')
+                                    <span data-bs-toggle="tooltip" data-bs-title="@lang('This percentage is applied to the purchased package amount and paid only to the direct sponsor.')">
                                         <i class="las la-exclamation-circle"></i>
                                     </span>
                                 </label>
                                 <div class="input-group">
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ gs('cur_sym') }} </span>
-                                        <input class="form-control" name="ref_com" type="number" step="any" required value="{{ old('ref_com') }}">
-                                    </div>
+                                    <input class="form-control" name="ref_com" type="number" step="any" min="0" required value="{{ old('ref_com') }}">
+                                    <span class="input-group-text">%</span>
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
-                                <label class="font-weight-bold"> @lang('Tree Commission')
-                                    <span data-bs-toggle="tooltip" data-bs-title="@lang('When someone buys this plan, all of his ancestors will get this amount')">
+                                <label class="font-weight-bold"> @lang('Matching Income (%)')
+                                    <span data-bs-toggle="tooltip" data-bs-title="@lang('This percentage is used to calculate binary matching income from the matched BV of the active user.')">
                                         <i class="las la-exclamation-circle"></i>
                                     </span>
                                 </label>
                                 <div class="input-group">
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ gs('cur_sym') }} </span>
-                                        <input class="form-control" name="tree_com" type="number" step="any" required value="{{ old('tree_com') }}">
-                                    </div>
+                                    <input class="form-control" name="tree_com" type="number" step="any" min="0" required value="{{ old('tree_com') }}">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label class="font-weight-bold"> @lang('Daily Capping') </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ gs('cur_sym') }} </span>
+                                    <input class="form-control" name="daily_capping" type="number" step="any" min="0" required value="{{ old('daily_capping', 0) }}">
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label class="font-weight-bold"> @lang('Monthly Capping') </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ gs('cur_sym') }} </span>
+                                    <input class="form-control" name="monthly_capping" type="number" step="any" min="0" required value="{{ old('monthly_capping', 0) }}">
                                 </div>
                             </div>
                         </div>

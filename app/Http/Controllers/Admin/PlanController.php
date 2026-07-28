@@ -18,11 +18,13 @@ class PlanController extends Controller
     public function store(Request $request, $id = 0)
     {
         $request->validate([
-            'name'     => 'required',
-            'price'    => 'required|numeric|min:0',
-            'bv'       => 'required|min:0|integer',
-            'ref_com'  => 'required|numeric|min:0',
-            'tree_com' => 'required|numeric|min:0',
+            'name'            => 'required',
+            'price'           => 'required|numeric|min:0',
+            'bv'              => 'required|min:0|integer',
+            'ref_com'         => 'required|numeric|min:0',
+            'tree_com'        => 'required|numeric|min:0',
+            'daily_capping'   => 'required|numeric|min:0',
+            'monthly_capping' => 'required|numeric|min:0',
         ]);
 
         if (!$id) {
@@ -33,11 +35,13 @@ class PlanController extends Controller
             $plan         = Plan::findOrFail($id);
         }
 
-        $plan->name     = $request->name;
-        $plan->price    = $request->price;
-        $plan->bv       = $request->bv;
-        $plan->ref_com  = $request->ref_com;
-        $plan->tree_com = $request->tree_com;
+        $plan->name            = $request->name;
+        $plan->price           = $request->price;
+        $plan->bv              = $request->bv;
+        $plan->ref_com         = $request->ref_com;
+        $plan->tree_com        = $request->tree_com;
+        $plan->daily_capping   = $request->daily_capping;
+        $plan->monthly_capping = $request->monthly_capping;
         $plan->save();
 
         $notify[] = ['success', $notification];

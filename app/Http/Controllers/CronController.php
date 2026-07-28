@@ -99,40 +99,70 @@ class CronController extends Controller
             $generalSetting->last_paid = Carbon::now()->toDateString();
             $generalSetting->save();
 
-            $eligibleUsers = UserExtra::where('bv_left', '>=', $generalSetting->total_bv)->where('bv_right', '>=', $generalSetting->total_bv)->get();
+            $eligibleUsers = UserExtra::where('bv_left', '>', 0)->where('bv_right', '>', 0)->get();
             foreach ($eligibleUsers as $uex) {
                 $weak = $uex->bv_left < $uex->bv_right ? $uex->bv_left : $uex->bv_right;
-                $weaker = $weak < $generalSetting->max_bv ? $weak : $generalSetting->max_bv;
-
-                $pair = intval($weaker / $generalSetting->total_bv);
-
-                $bonus = $pair * $generalSetting->bv_price;
+                // ORIVA matches directly on the full weak-leg business with no pair-unit rounding.
+                $paidbv = $weak;
 
                 $payment = User::find($uex->user_id);
-                $payment->balance += $bonus;
+                $currentPlan = $payment?->plan;
+
+                if (!$payment || !$currentPlan) {
+                    continue;
+                }
+
+                $matchingPercentage = (float) ($currentPlan->tree_com ?? 0);
+                $bonus = getAmount($paidbv * ($matchingPercentage / 100), 8);
+                $creditAmount = getCommissionCreditAmountByCapping($payment, $bonus);
+                $isCapped = $creditAmount < $bonus;
+
+                if ($bonus > 0 && $paidbv > 0) {
+                    $consumedBv = getAmount(($creditAmount / $bonus) * $paidbv, 8);
+                } else {
+                    $consumedBv = 0;
+                }
+
+                if ($creditAmount <= 0) {
+                    continue;
+                }
+
+                $payment->balance += $creditAmount;
+                $payment->total_binary_com += $creditAmount;
                 $payment->save();
 
                 $user = $payment;
 
                 $trx = new Transaction();
                 $trx->user_id = $payment->id;
-                $trx->amount = $bonus;
+                $trx->amount = $creditAmount;
                 $trx->charge = 0;
                 $trx->trx_type = '+';
                 $trx->post_balance = $payment->balance;
                 $trx->remark = 'binary_commission';
                 $trx->trx = getTrx();
-                $trx->details = 'Paid ' . showAmount($bonus) . ' For ' . $pair * $generalSetting->total_bv . ' BV.';
+                $trx->details = 'Paid ' . showAmount($creditAmount) . ' For ' . $consumedBv . ' matched BV.' . ($isCapped ? ' Remaining matching BV carried forward due to capping.' : '');
                 $trx->save();
 
                 notify($user, 'MATCHING_BONUS', [
-                    'amount' => showAmount($bonus,currencyFormat:false),
-                    'paid_bv' => $pair * $generalSetting->total_bv,
+                    'amount' => showAmount($creditAmount,currencyFormat:false),
+                    'paid_bv' => $consumedBv,
                     'post_balance' => showAmount($payment->balance,currencyFormat:false),
                     'trx' =>  $trx->trx,
                 ]);
 
-                $paidbv = $pair * $generalSetting->total_bv;
+                if ($isCapped) {
+                    // ORIVA 4th time capping carries unpaid matching BV into the next cycle.
+                    $uex->bv_left = max(0, getAmount($uex->bv_left - $consumedBv, 8));
+                    $uex->bv_right = max(0, getAmount($uex->bv_right - $consumedBv, 8));
+                    $uex->save();
+                    if ($consumedBv != 0) {
+                    createBVLog($user->id, 1, $consumedBv, 'Paid ' . $creditAmount . ' ' . $generalSetting->cur_text . ' for ' . $consumedBv . ' matched BV after capping.');
+                        createBVLog($user->id, 2, $consumedBv, 'Paid ' . $creditAmount . ' ' . $generalSetting->cur_text . ' for ' . $consumedBv . ' matched BV after capping.');
+                    }
+                    continue;
+                }
+
                 if ($generalSetting->cary_flash == 0) {
                     $bv['setl'] = $uex->bv_left - $paidbv;
                     $bv['setr'] = $uex->bv_right - $paidbv;
@@ -160,14 +190,14 @@ class CronController extends Controller
 
 
                 if ($bv['paid'] != 0) {
-                    createBVLog($user->id, 1, $bv['paid'], 'Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' BV.');
-                    createBVLog($user->id, 2, $bv['paid'], 'Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' BV.');
+                    createBVLog($user->id, 1, $bv['paid'], 'Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' matched BV.');
+                    createBVLog($user->id, 2, $bv['paid'], 'Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' matched BV.');
                 }
                 if ($bv['lostl'] != 0) {
-                    createBVLog($user->id, 1, $bv['lostl'], 'Flush ' . $bv['lostl'] . ' BV after Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' BV.');
+                    createBVLog($user->id, 1, $bv['lostl'], 'Flush ' . $bv['lostl'] . ' BV after Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' matched BV.');
                 }
                 if ($bv['lostr'] != 0) {
-                    createBVLog($user->id, 2, $bv['lostr'], 'Flush ' . $bv['lostr'] . ' BV after Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' BV.');
+                    createBVLog($user->id, 2, $bv['lostr'], 'Flush ' . $bv['lostr'] . ' BV after Paid ' . $bonus . ' ' . $generalSetting->cur_text . ' For ' . $paidbv . ' matched BV.');
                 }
             }
             return '---';

@@ -88,7 +88,7 @@ Route::middleware('admin')->group(function () {
 
         Route::get('referral/{id}', 'userRef')->name('referral');
 
-        // matching bonus
+        // matching settings
         Route::post('matching-bonus/update', 'matchingUpdate')->name('matching-bonus.update');
     });
 

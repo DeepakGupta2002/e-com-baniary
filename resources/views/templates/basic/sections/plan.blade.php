@@ -28,8 +28,10 @@
                             <p class="plan-name">{{ __(@$plan->name) }}</p>
                             <ul class="plan-info">
                                 <li class="active"><i  class="las la-business-time __plan_info " data="bv"></i>@lang('Business Volume: '){{ __(@$plan->bv) }}</li>
-                                <li class="active"><i class="las la-comment-dollar __plan_info" data="ref_com"></i>@lang('Referral Commission: '){{gs('cur_sym')}} {{getAmount($plan->ref_com)}}</li>
-                                <li class="active"><i class="las la-comments-dollar __plan_info" data="tree_com"></i>@lang('Commission To Tree:') {{gs('cur_sym')}} {{getAmount($plan->tree_com)}}</li>
+                                <li class="active"><i class="las la-comment-dollar __plan_info" data="ref_com"></i>@lang('Referral Commission: '){{getAmount($plan->ref_com)}}%</li>
+                                <li class="active"><i class="las la-comments-dollar __plan_info" data="tree_com"></i>@lang('Matching Income:') {{getAmount($plan->tree_com)}}%</li>
+                                <li class="active"><i class="las la-wallet"></i>@lang('Daily Capping:') {{gs('cur_sym')}} {{getAmount($plan->daily_capping)}}</li>
+                                <li class="active"><i class="las la-calendar-alt"></i>@lang('Monthly Capping:') {{gs('cur_sym')}} {{getAmount($plan->monthly_capping)}}</li>
                             </ul>
                             <div class="text-center"><a href="{{route('user.plan.index')}}"  class="cmn--btn-2 btn--md active"><span>@lang('Subscribe Plan')</span></a></div>
                         </div>
@@ -45,7 +47,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="__modal_title">@lang('Commission to tree info')</h5>
+                <h5 class="modal-title" id="__modal_title">@lang('Plan Info')</h5>
 
             </div>
             <div class="modal-body">
@@ -77,16 +79,16 @@
 
                }
                if(data=='ref_com'){
-                 html=`  <h5>  <span class=" text--danger">@lang('When Your Direct-Referred/Sponsored  User Subscribe in') <b> @lang('ANY PLAN') </b>, @lang('You will get this amount').</span>
+                 html=`  <h5>  <span class=" text--danger">@lang('When your direct sponsored user purchases this plan, you receive this percentage of the package amount as referral income.').</span>
                         <br>
                         <br>
-                        <span class="text--success"> @lang('This is the reason You should Choose a Plan With Bigger Referral Commission').</span> </h5>`
+                        <span class="text--success"> @lang('Example: 10% on a 2500 package pays 250 as direct referral income.').</span> </h5>`
                         modal.find('#__modal_title').html("@lang('Referral Commission info')")
 
                }
                if(data=='tree_com'){
-                    html=` <h5 class=" text--danger">@lang('When someone from your below tree subscribe this plan, You will get this amount as Tree Commission'). </h5>`
-                    modal.find('#__modal_title').html(html)
+                    html=` <h5 class=" text--danger">@lang('Binary matching income is calculated from your matched left and right BV using this percentage from your active plan.'). </h5>`
+                    modal.find('#__modal_title').html("@lang('Matching Income info')")
                 }
               modal.find('.modal-body').html(html)
                $(modal).modal('show')
@@ -98,4 +100,3 @@
         })(jQuery)
     </script>
 @endpush
-
