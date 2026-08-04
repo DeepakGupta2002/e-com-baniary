@@ -4,14 +4,20 @@ namespace Tests\Feature;
 
 use App\Constants\Status;
 use App\Models\BvLog;
+use App\Models\Extension;
 use App\Models\GeneralSetting;
+use App\Models\LevelIncomeLog;
 use App\Models\Plan;
+use App\Models\Rank;
+use App\Models\RankRewardLog;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserExtra;
 use App\Models\UserLogin;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -21,6 +27,8 @@ class OrivaCompensationEngineTest extends TestCase
     {
         parent::setUp();
 
+        Auth::logout();
+        Session::flush();
         $this->seedTestingRuntimeDefaults();
     }
 
@@ -57,32 +65,21 @@ class OrivaCompensationEngineTest extends TestCase
     public function test_direct_referral_income_uses_sponsor_plan_percentage_on_joining_package_amount(): void
     {
         foreach ($this->sponsorJoinPlanMatrix() as $caseName => $expected) {
+            Auth::logout();
+            Session::flush();
+
             $sponsor = $this->createReadyUser([
                 'username' => $this->uniqueUsername('refsp'),
                 'plan_id'  => $expected['sponsor_plan_id'],
             ]);
 
-            $childEmail = $this->uniqueEmail('ref-' . Str::slug($caseName));
-
-            $this->post(route('user.register'), [
-                'firstname'             => 'Direct',
-                'lastname'              => 'Child',
-                'referBy'               => $sponsor->username,
-                'position'              => Status::LEFT,
-                'email'                 => $childEmail,
-                'password'              => 'secret123',
-                'password_confirmation' => 'secret123',
-            ])->assertRedirect();
-
-            $child = User::where('email', $childEmail)->firstOrFail();
-            $child->username = $this->uniqueUsername('refch');
-            $child->profile_complete = Status::YES;
-            $child->country_code = 'IN';
-            $child->country_name = 'India';
-            $child->dial_code = '91';
-            $child->mobile = $this->uniqueMobile();
-            $child->balance = $expected['joining_price'];
-            $child->save();
+            $child = $this->createReadyUser([
+                'ref_by'   => $sponsor->id,
+                'pos_id'   => $sponsor->id,
+                'position' => Status::LEFT,
+                'balance'  => $expected['joining_price'],
+            ]);
+            updateFreeCount($child->id);
 
             $startingSponsorBalance = (float) $sponsor->balance;
 
@@ -267,14 +264,330 @@ class OrivaCompensationEngineTest extends TestCase
 
         $this->assertCount(2, $binaryTransactions);
         $this->assertEquals(100.0, (float) $binaryTransactions[0]->amount);
-        $this->assertEquals(250.0, (float) $binaryTransactions[1]->amount);
-        $this->assertEquals(350.0, (float) $sponsor->total_binary_com);
+        $this->assertEquals(400.0, (float) $binaryTransactions[1]->amount);
+        $this->assertEquals(500.0, (float) $sponsor->total_binary_com);
         $this->assertEquals(0.0, round((float) $extra->bv_left, 8));
         $this->assertEquals(0.0, round((float) $extra->bv_right, 8));
 
         $plan->daily_capping = $originalDaily;
         $plan->monthly_capping = $originalMonthly;
         $plan->save();
+    }
+
+    public function test_level_income_is_distributed_to_10_sponsor_levels_from_matching_income(): void
+    {
+        $receiverPlan = Plan::findOrFail(5);
+        $uplines = [];
+        $refBy = 0;
+
+        for ($i = 1; $i <= 10; $i++) {
+            $uplines[$i] = $this->createReadyUser([
+                'ref_by'  => $refBy,
+                'plan_id' => 3,
+            ]);
+            $refBy = $uplines[$i]->id;
+        }
+
+        $matchingReceiver = $this->createReadyUser([
+            'ref_by' => $uplines[10]->id,
+        ]);
+
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($matchingReceiver, (float) $receiverPlan->price);
+
+        $this->purchasePlan($matchingReceiver, 5, (float) $receiverPlan->price);
+        $this->purchasePlan($leftChild, 5, (float) $receiverPlan->price);
+        $this->purchasePlan($rightChild, 5, (float) $receiverPlan->price);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $matchingReceiver->refresh();
+        $matchingTransaction = Transaction::where('user_id', $matchingReceiver->id)
+            ->where('remark', 'binary_commission')
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->assertEquals(1800.0, (float) $matchingTransaction->amount);
+
+        $expectedByLevel = [
+            1 => 180.0,
+            2 => 72.0,
+            3 => 54.0,
+            4 => 54.0,
+            5 => 36.0,
+            6 => 36.0,
+            7 => 36.0,
+            8 => 36.0,
+            9 => 18.0,
+            10 => 18.0,
+        ];
+
+        foreach ($expectedByLevel as $level => $expectedAmount) {
+            $receiver = $uplines[11 - $level];
+            $receiver->refresh();
+
+            $log = LevelIncomeLog::where('receiver_user_id', $receiver->id)
+                ->where('source_user_id', $matchingReceiver->id)
+                ->where('matching_transaction_id', $matchingTransaction->id)
+                ->where('level_no', $level)
+                ->first();
+
+            $transaction = Transaction::where('user_id', $receiver->id)
+                ->where('remark', 'level_income')
+                ->where('details', 'like', '%Level ' . $level . ' income%')
+                ->latest('id')
+                ->first();
+
+            $this->assertNotNull($log, "Level income log missing at level {$level}.");
+            $this->assertSame('paid', $log->status, "Level income status mismatch at level {$level}.");
+            $this->assertEquals($expectedAmount, (float) $log->amount, "Level income amount mismatch in log at level {$level}.");
+            $this->assertNotNull($transaction, "Level income transaction missing at level {$level}.");
+            $this->assertEquals($expectedAmount, (float) $transaction->amount, "Level income transaction amount mismatch at level {$level}.");
+            $this->assertEquals($expectedAmount, (float) $receiver->total_level_income, "Level income summary mismatch at level {$level}.");
+        }
+    }
+
+    public function test_level_income_is_not_credited_twice_for_same_matching_transaction_and_level(): void
+    {
+        $upline = $this->createReadyUser([
+            'plan_id' => 3,
+        ]);
+        $matchingReceiver = $this->createReadyUser([
+            'ref_by' => $upline->id,
+        ]);
+
+        $matchingTransaction = new Transaction();
+        $matchingTransaction->user_id = $matchingReceiver->id;
+        $matchingTransaction->amount = 250;
+        $matchingTransaction->charge = 0;
+        $matchingTransaction->trx_type = '+';
+        $matchingTransaction->remark = 'binary_commission';
+        $matchingTransaction->trx = getTrx();
+        $matchingTransaction->post_balance = 250;
+        $matchingTransaction->details = 'Test binary matching income.';
+        $matchingTransaction->save();
+
+        $service = app(\App\Services\LevelIncomeService::class);
+        $service->distribute($matchingReceiver, $matchingTransaction, 250);
+        $service->distribute($matchingReceiver, $matchingTransaction, 250);
+
+        $upline->refresh();
+
+        $this->assertEquals(25.0, (float) $upline->balance);
+        $this->assertEquals(25.0, (float) $upline->total_level_income);
+        $this->assertEquals(1, LevelIncomeLog::where('receiver_user_id', $upline->id)
+            ->where('source_user_id', $matchingReceiver->id)
+            ->where('matching_transaction_id', $matchingTransaction->id)
+            ->where('level_no', 1)
+            ->count());
+        $this->assertEquals(1, Transaction::where('user_id', $upline->id)
+            ->where('remark', 'level_income')
+            ->where('details', 'like', '%Level 1 income%')
+            ->count());
+    }
+
+    public function test_level_income_skips_inactive_upline_and_continues_to_next_levels(): void
+    {
+        $receiverPlan = Plan::findOrFail(3);
+        $level3 = $this->createReadyUser(['plan_id' => 3]);
+        $level2 = $this->createReadyUser([
+            'ref_by'  => $level3->id,
+            'plan_id' => 3,
+            'status'  => Status::USER_BAN,
+        ]);
+        $level1 = $this->createReadyUser([
+            'ref_by'  => $level2->id,
+            'plan_id' => 3,
+        ]);
+
+        $matchingReceiver = $this->createReadyUser([
+            'ref_by' => $level1->id,
+        ]);
+
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($matchingReceiver, (float) $receiverPlan->price);
+
+        $this->purchasePlan($matchingReceiver, 3, (float) $receiverPlan->price);
+        $this->purchasePlan($leftChild, 3, (float) $receiverPlan->price);
+        $this->purchasePlan($rightChild, 3, (float) $receiverPlan->price);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $matchingTransaction = Transaction::where('user_id', $matchingReceiver->id)
+            ->where('remark', 'binary_commission')
+            ->latest('id')
+            ->firstOrFail();
+
+        $level1->refresh();
+        $level2->refresh();
+        $level3->refresh();
+
+        $this->assertEquals(25.0, (float) $level1->total_level_income);
+        $this->assertEquals(0.0, (float) $level2->total_level_income);
+        $this->assertEquals(7.5, (float) $level3->total_level_income);
+
+        $this->assertDatabaseHas('level_income_logs', [
+            'receiver_user_id' => $level1->id,
+            'source_user_id' => $matchingReceiver->id,
+            'matching_transaction_id' => $matchingTransaction->id,
+            'level_no' => 1,
+            'status' => 'paid',
+        ]);
+
+        $this->assertDatabaseHas('level_income_logs', [
+            'receiver_user_id' => $level2->id,
+            'source_user_id' => $matchingReceiver->id,
+            'matching_transaction_id' => $matchingTransaction->id,
+            'level_no' => 2,
+            'status' => 'skipped_inactive',
+        ]);
+
+        $this->assertDatabaseHas('level_income_logs', [
+            'receiver_user_id' => $level3->id,
+            'source_user_id' => $matchingReceiver->id,
+            'matching_transaction_id' => $matchingTransaction->id,
+            'level_no' => 3,
+            'status' => 'paid',
+        ]);
+    }
+
+    public function test_level_income_respects_daily_capping(): void
+    {
+        $plan = Plan::findOrFail(3);
+        $originalDaily = (float) $plan->daily_capping;
+        $originalMonthly = (float) $plan->monthly_capping;
+
+        $plan->daily_capping = 260;
+        $plan->monthly_capping = 999999;
+        $plan->save();
+
+        $upline = $this->createReadyUser([
+            'plan_id' => 3,
+        ]);
+        $matchingReceiver = $this->createReadyUser([
+            'ref_by' => $upline->id,
+        ]);
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($matchingReceiver, 2500.0);
+
+        $this->purchasePlan($upline, 3, 2500.0);
+        $this->purchasePlan($matchingReceiver, 3, 2500.0);
+        $this->purchasePlan($leftChild, 3, 2500.0);
+        $this->purchasePlan($rightChild, 3, 2500.0);
+
+        $upline->refresh();
+        $this->assertEquals(250.0, (float) $upline->total_ref_com);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $upline->refresh();
+        $log = LevelIncomeLog::where('receiver_user_id', $upline->id)
+            ->where('source_user_id', $matchingReceiver->id)
+            ->where('level_no', 1)
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->assertEquals(10.0, (float) $upline->total_level_income);
+        $this->assertEquals(10.0, (float) $log->amount);
+        $this->assertSame('paid', $log->status);
+
+        $plan->daily_capping = $originalDaily;
+        $plan->monthly_capping = $originalMonthly;
+        $plan->save();
+    }
+
+    public function test_level_income_history_page_loads_for_receiver(): void
+    {
+        $upline = $this->createReadyUser([
+            'plan_id' => 3,
+        ]);
+        $matchingReceiver = $this->createReadyUser([
+            'ref_by' => $upline->id,
+        ]);
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($matchingReceiver, 2500.0);
+
+        $this->purchasePlan($matchingReceiver, 3, 2500.0);
+        $this->purchasePlan($leftChild, 3, 2500.0);
+        $this->purchasePlan($rightChild, 3, 2500.0);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $this->actingAs($upline)
+            ->get(route('user.level.income.index'))
+            ->assertOk()
+            ->assertSee('Level Income')
+            ->assertSee($matchingReceiver->username);
+    }
+
+    public function test_rank_reward_is_credited_when_team_dp_reaches_threshold(): void
+    {
+        $plan = Plan::findOrFail(3);
+        $rank = Rank::orderBy('id')->firstOrFail();
+        $rank->required_team_dp = 5000;
+        $rank->reward_amount = 321.25;
+        $rank->save();
+
+        $sponsor = $this->createReadyUser([
+            'balance' => (float) $plan->price,
+        ]);
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($sponsor, (float) $plan->price);
+
+        $this->purchasePlan($sponsor, 3, (float) $plan->price);
+        $this->purchasePlan($leftChild, 3, (float) $plan->price);
+        $this->purchasePlan($rightChild, 3, (float) $plan->price);
+
+        $sponsor->refresh();
+
+        $transaction = Transaction::where('user_id', $sponsor->id)
+            ->where('remark', 'rank_reward')
+            ->latest('id')
+            ->first();
+
+        $log = RankRewardLog::where('user_id', $sponsor->id)
+            ->where('rank_id', $rank->id)
+            ->first();
+
+        $this->assertNotNull($transaction, 'Rank reward transaction missing.');
+        $this->assertNotNull($log, 'Rank reward log missing.');
+        $this->assertEquals(5000.0, (float) $sponsor->total_team_dp);
+        $this->assertEquals(321.25, (float) $sponsor->total_rank_reward);
+        $this->assertEquals(321.25, (float) $sponsor->balance);
+        $this->assertSame($rank->id, $sponsor->current_rank_id);
+        $this->assertEquals(321.25, (float) $transaction->amount);
+        $this->assertEquals(321.25, (float) $log->reward_amount);
+        $this->assertSame('paid', $log->status);
+    }
+
+    public function test_rank_reward_is_not_credited_twice_for_same_rank(): void
+    {
+        $plan = Plan::findOrFail(3);
+        $rank = Rank::orderBy('id')->firstOrFail();
+        $rank->required_team_dp = 5000;
+        $rank->reward_amount = 321.25;
+        $rank->save();
+
+        $sponsor = $this->createReadyUser([
+            'balance' => (float) $plan->price,
+        ]);
+        [$leftChild, $rightChild] = $this->attachBinaryChildren($sponsor, (float) $plan->price);
+
+        $this->purchasePlan($sponsor, 3, (float) $plan->price);
+        $this->purchasePlan($leftChild, 3, (float) $plan->price);
+        $this->purchasePlan($rightChild, 3, (float) $plan->price);
+
+        $extraChild = $this->createReadyUser([
+            'pos_id' => $sponsor->id,
+        ]);
+
+        updateBV($extraChild->id, 1000, 'Additional team DP');
+
+        $sponsor->refresh();
+
+        $this->assertEquals(6000.0, (float) $sponsor->total_team_dp);
+        $this->assertEquals(321.25, (float) $sponsor->total_rank_reward);
+        $this->assertEquals(1, RankRewardLog::where('user_id', $sponsor->id)->where('rank_id', $rank->id)->count());
+        $this->assertEquals(1, Transaction::where('user_id', $sponsor->id)->where('remark', 'rank_reward')->count());
     }
 
     private function createBinaryScenarioUsers(int $planId): array
@@ -301,6 +614,27 @@ class OrivaCompensationEngineTest extends TestCase
         return [$sponsor, $leftChild, $rightChild];
     }
 
+    private function attachBinaryChildren(User $parent, float $planPrice): array
+    {
+        $leftChild = $this->createReadyUser([
+            'ref_by'   => 0,
+            'pos_id'   => $parent->id,
+            'position' => Status::LEFT,
+            'balance'  => $planPrice,
+        ]);
+        $rightChild = $this->createReadyUser([
+            'ref_by'   => 0,
+            'pos_id'   => $parent->id,
+            'position' => Status::RIGHT,
+            'balance'  => $planPrice,
+        ]);
+
+        updateFreeCount($leftChild->id);
+        updateFreeCount($rightChild->id);
+
+        return [$leftChild, $rightChild];
+    }
+
     private function purchasePlan(User $user, int $planId, float $planPrice): void
     {
         if ((float) $user->balance < $planPrice) {
@@ -316,14 +650,12 @@ class OrivaCompensationEngineTest extends TestCase
 
     private function resetMatchingWindow(): void
     {
-        $general = GeneralSetting::firstOrFail();
-        $general->matching_bonus_time = 'daily';
-        $general->matching_when = date('H');
+        $general = gs();
+        $general->matching_bonus_time = 'manual';
+        $general->matching_when = 'manual';
         $general->last_paid = now()->subDay()->startOfDay();
         $general->cary_flash = 0;
         $general->save();
-
-        Cache::forget('GeneralSetting');
     }
 
     private function seedTestingRuntimeDefaults(): void
@@ -335,6 +667,8 @@ class OrivaCompensationEngineTest extends TestCase
         $general->ev = 0;
         $general->sv = 0;
         $general->save();
+
+        Extension::whereIn('act', ['google-recaptcha2', 'custom-captcha'])->update(['status' => Status::DISABLE]);
 
         if (!UserLogin::where('user_ip', '127.0.0.1')->exists()) {
             $login = new UserLogin();

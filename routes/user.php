@@ -113,6 +113,17 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('tree/search', 'otherTree')->name('other.tree.search');
                 Route::get('tree/{user}', 'otherTree')->name('other.tree');
             });
+
+            Route::controller('LevelIncomeController')->prefix('level-income')->name('level.income.')->group(function () {
+                Route::get('/', 'index')->name('index');
+            });
+
+            Route::controller('RankRewardController')->prefix('rank-rewards')->name('rank.rewards.')->group(function () {
+                Route::get('/', 'index')->name('index');
+            });
+            Route::controller('RankRewardController')->prefix('leaderboard')->name('leaderboard.')->group(function () {
+                Route::get('/', 'leaderboard')->name('index');
+            });
         });
 
         // Payment

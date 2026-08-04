@@ -217,6 +217,113 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
+                                <h6 class="title">@lang('Total Level Income')</h6>
+                                <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_level_income) }}</h3>
+                            </div>
+                            <div class="icon"><i class="las la-layer-group"></i></div>
+                        </div>
+                        <div class="dashboard-item-body">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
+                                <h6 class="title">@lang('Current Rank')</h6>
+                                <h3 class="ammount theme-one">{{ getCurrentRankName(auth()->user()) }}</h3>
+                            </div>
+                            <div class="icon"><i class="las la-award"></i></div>
+                        </div>
+                        <div class="dashboard-item-body"></div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
+                                <h6 class="title">@lang('Total Team DP')</h6>
+                                <h3 class="ammount theme-one">{{ getAmount(auth()->user()->total_team_dp) }}</h3>
+                            </div>
+                            <div class="icon"><i class="las la-sitemap"></i></div>
+                        </div>
+                        <div class="dashboard-item-body"></div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
+                                <h6 class="title">@lang('Total Rank Reward')</h6>
+                                <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_rank_reward) }}</h3>
+                            </div>
+                            <div class="icon"><i class="las la-trophy"></i></div>
+                        </div>
+                        <div class="dashboard-item-body"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card custom--card">
+                        <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                            <h5 class="mb-0">@lang('Rank Reward Roadmap')</h5>
+                            <span class="badge badge--info">@lang('Your Team DP'): {{ getAmount(auth()->user()->total_team_dp) }}</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table--responsive--md">
+                                    <thead>
+                                        <tr>
+                                            <th>@lang('Rank')</th>
+                                            <th>@lang('Required DP')</th>
+                                            <th>@lang('Reward')</th>
+                                            <th>@lang('Status')</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $teamDp = (float) auth()->user()->total_team_dp;
+                                            $currentRankShown = false;
+                                        @endphp
+                                        @forelse($ranks as $rank)
+                                            @php
+                                                $isAchieved = $teamDp >= (float) $rank->required_team_dp;
+                                                $isCurrent = !$isAchieved && !$currentRankShown;
+                                                if ($isCurrent) {
+                                                    $currentRankShown = true;
+                                                }
+                                            @endphp
+                                            <tr>
+                                                <td>{{ __($rank->name) }}</td>
+                                                <td>{{ getAmount($rank->required_team_dp) }}</td>
+                                                <td>{{ showAmount($rank->reward_amount) }}</td>
+                                                <td>
+                                                    @if ($isAchieved)
+                                                        <span class="badge badge--success">@lang('Achieved')</span>
+                                                    @elseif ($isCurrent)
+                                                        <span class="badge badge--warning">@lang('Current')</span>
+                                                    @else
+                                                        <span class="badge badge--dark">@lang('Locked')</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="100%" class="text-center text-muted">@lang('No rank found')</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         @endsection
 

@@ -146,4 +146,24 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserExtra::class);
     }
+
+    public function receivedLevelIncomeLogs()
+    {
+        return $this->hasMany(LevelIncomeLog::class, 'receiver_user_id');
+    }
+
+    public function sourceLevelIncomeLogs()
+    {
+        return $this->hasMany(LevelIncomeLog::class, 'source_user_id');
+    }
+
+    public function currentRank()
+    {
+        return $this->belongsTo(Rank::class, 'current_rank_id');
+    }
+
+    public function rankRewardLogs()
+    {
+        return $this->hasMany(RankRewardLog::class);
+    }
 }

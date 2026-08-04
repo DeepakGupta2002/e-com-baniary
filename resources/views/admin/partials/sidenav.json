@@ -40,6 +40,44 @@
         "route_name": "admin.plan.index",
         "menu_active": "admin.plan.index"
     },
+    "rank_reward": {
+        "title": "Rank & Rewards",
+        "icon": "las la-award",
+        "menu_active": "admin.rank*",
+        "submenu": [
+            {
+                "keyword": [
+                    "Rank Management",
+                    "Ranks",
+                    "Rewards",
+                    "Compensation rank"
+                ],
+                "title": "Rank Management",
+                "route_name": "admin.rank.index",
+                "menu_active": "admin.rank.index"
+            },
+            {
+                "keyword": [
+                    "Rank Reward Logs",
+                    "Rank history",
+                    "Reward history"
+                ],
+                "title": "Reward Logs",
+                "route_name": "admin.rank.logs",
+                "menu_active": "admin.rank.logs"
+            },
+            {
+                "keyword": [
+                    "Leaderboard",
+                    "Top users",
+                    "Rank leaderboard"
+                ],
+                "title": "Leaderboard",
+                "route_name": "admin.rank.leaderboard",
+                "menu_active": "admin.rank.leaderboard"
+            }
+        ]
+    },
     "category": {
         "keyword": [
             "Category",
@@ -524,6 +562,20 @@
                 "route_name": "admin.report.binary.commission",
                 "menu_active": [
                     "admin.report.binary.commission"
+                ]
+            },
+            {
+                "keyword": [
+                    "Level Income",
+                    "Level bonus",
+                    "Sponsor income",
+                    "Matching override",
+                    "Level commission"
+                ],
+                "title": "Level Income",
+                "route_name": "admin.report.level.income",
+                "menu_active": [
+                    "admin.report.level.income"
                 ]
             },
             {

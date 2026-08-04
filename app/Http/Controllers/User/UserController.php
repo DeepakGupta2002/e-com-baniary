@@ -6,6 +6,7 @@ use App\Models\Form;
 use App\Models\User;
 use App\Models\BvLog;
 use App\Models\Order;
+use App\Models\Rank;
 use App\Models\Deposit;
 use App\Models\Product;
 use App\Constants\Status;
@@ -30,7 +31,8 @@ class UserController extends Controller
         $pendingWithdraw  = Withdrawal::where('user_id', auth()->id())->where('status', 2)->count();
         $totalRef         = User::where('ref_by', auth()->id())->count();
         $totalBvCut       = BvLog::where('user_id', auth()->id())->where('trx_type', '-')->sum('amount');
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut'));
+        $ranks            = Rank::where('status', 1)->orderBy('sort_order')->orderBy('required_team_dp')->get();
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks'));
     }
 
     public function depositHistory(Request $request)

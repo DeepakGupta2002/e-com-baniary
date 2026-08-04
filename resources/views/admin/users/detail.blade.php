@@ -26,6 +26,18 @@
                     <x-widget type="2" value="{{ showAmount($user->total_binary_com) }}" title="Total Binary Commission" style="7" link="{{ route('admin.report.binary.commission', $user->id) }}" icon="la la-tree" bg="3" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ showAmount($user->total_level_income) }}" title="Total Level Income" style="7" link="{{ route('admin.report.level.income', $user->id) }}" icon="las la-layer-group" bg="15" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ getCurrentRankName($user) }}" title="Current Rank" style="7" link="{{ route('admin.rank.logs') }}?search={{ $user->username }}" icon="las la-award" bg="5" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ getAmount($user->total_team_dp) }}" title="Total Team DP" style="7" link="{{ route('admin.rank.leaderboard') }}" icon="las la-sitemap" bg="10" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ showAmount($user->total_rank_reward) }}" title="Total Rank Reward" style="7" link="{{ route('admin.rank.logs') }}?search={{ $user->username }}" icon="las la-trophy" bg="9" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
                     <x-widget type="2" value="{{ getAmount($totalBvCut) }}" title="Total Cut BV" style="7" link="{{ route('admin.report.bvLog', $user->id) }}?type=cutBV" icon="la la-cut" bg="4" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">

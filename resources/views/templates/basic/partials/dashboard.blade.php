@@ -37,6 +37,21 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('user.level.income.index') }}" class="{{menuActive('user.level.income.index')}}">
+                                @lang('Level Income')
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('user.rank.rewards.index') }}" class="{{menuActive('user.rank.rewards.index')}}">
+                                @lang('Rank & Rewards')
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('user.leaderboard.index') }}" class="{{menuActive('user.leaderboard.index')}}">
+                                @lang('Leaderboard')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('user.orders') }}" class="{{menuActive('user.orders')}}">
                                 @lang('Orders')
                             </a>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RankController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -74,7 +75,7 @@ Route::middleware('admin')->group(function () {
         Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');
         Route::post('send-notification/{id}', 'sendNotificationSingle')->name('notification.single');
         Route::get('login/{id}', 'login')->name('login');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'ManageUsersController@status')->name('status');
 
         Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
         Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
@@ -100,7 +101,7 @@ Route::middleware('admin')->group(function () {
             Route::get('edit/{alias}', 'edit')->name('edit');
             Route::post('update/{code}', 'update')->name('update');
             Route::post('remove/{id}', 'remove')->name('remove');
-            Route::post('status/{id}', 'status')->name('status');
+            Route::post('status/{id}', 'AutomaticGatewayController@status')->name('status');
         });
 
 
@@ -111,7 +112,7 @@ Route::middleware('admin')->group(function () {
             Route::post('new', 'store')->name('store');
             Route::get('edit/{alias}', 'edit')->name('edit');
             Route::post('update/{id}', 'update')->name('update');
-            Route::post('status/{id}', 'status')->name('status');
+            Route::post('status/{id}', 'ManualGatewayController@status')->name('status');
         });
     });
 
@@ -151,7 +152,7 @@ Route::middleware('admin')->group(function () {
             Route::post('create', 'store')->name('store');
             Route::get('edit/{id}', 'edit')->name('edit');
             Route::post('edit/{id}', 'update')->name('update');
-            Route::post('status/{id}', 'status')->name('status');
+            Route::post('status/{id}', 'WithdrawMethodController@status')->name('status');
         });
     });
 
@@ -166,6 +167,7 @@ Route::middleware('admin')->group(function () {
         Route::get('bv-log/{user_id?}', 'bvLog')->name('bvLog');
         Route::get('referral-commission/{user_id?}', 'refCom')->name('referral.commission');
         Route::get('binary-commission/{user_id?}', 'binaryCom')->name('binary.commission');
+        Route::get('level-income/{user_id?}', 'levelIncome')->name('level.income');
     });
 
 
@@ -294,7 +296,7 @@ Route::middleware('admin')->group(function () {
     Route::controller('ExtensionController')->prefix('extensions')->name('extensions.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('update/{id}', 'update')->name('update');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'ExtensionController@status')->name('status');
     });
 
 
@@ -349,14 +351,22 @@ Route::middleware('admin')->group(function () {
     Route::controller('PlanController')->name('plan.')->prefix('plan')->group(function () {
         Route::get('index', 'index')->name('index');
         Route::post('store/{id?}', 'store')->name('store');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'PlanController@status')->name('status');
+    });
+
+    Route::controller(RankController::class)->name('rank.')->prefix('rank')->group(function () {
+        Route::get('index', 'index')->name('index');
+        Route::post('store/{id?}', 'store')->name('store');
+        Route::post('status/{id}', 'RankController@status')->name('status');
+        Route::get('logs', 'logs')->name('logs');
+        Route::get('leaderboard', 'leaderboard')->name('leaderboard');
     });
 
     //Category
     Route::controller('CategoryController')->name('category.')->prefix('category')->group(function () {
         Route::get('index', 'index')->name('index');
         Route::post('store/{id?}', 'store')->name('store');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'CategoryController@status')->name('status');
     });
 
     //Product
@@ -366,13 +376,13 @@ Route::middleware('admin')->group(function () {
         Route::post('/store', 'store')->name('store');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/update/{id}', 'update')->name('update');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'ProductController@status')->name('status');
         Route::post('feature/{id}', 'feature')->name('feature');
     });
 
     //Order
     Route::controller('OrderController')->name('order.')->prefix('order')->group(function () {
         Route::get('/{user_id?}', 'index')->name('index');
-        Route::post('status/{id}', 'status')->name('status');
+        Route::post('status/{id}', 'OrderController@status')->name('status');
     });
 });

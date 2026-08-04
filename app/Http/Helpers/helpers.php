@@ -13,6 +13,7 @@ use App\Models\Frontend;
 use App\Constants\Status;
 use App\Models\Extension;
 use App\Models\UserExtra;
+use App\Services\RankRewardService;
 use Illuminate\Support\Str;
 use App\Models\GeneralSetting;
 use Laramin\Utility\VugiChugi;
@@ -409,7 +410,7 @@ function showEmailAddress($email)
 
 function getRealIP()
 {
-    $ip = $_SERVER["REMOTE_ADDR"];
+    $ip = request()->ip() ?? ($_SERVER["REMOTE_ADDR"] ?? '127.0.0.1');
       //Deep detect ip
     if (filter_var(@$_SERVER['HTTP_FORWARDED'], FILTER_VALIDATE_IP)) {
         $ip = $_SERVER['HTTP_FORWARDED'];
@@ -547,6 +548,10 @@ function updateBV($id, $bv, $details)
                 $bvLog->trx_type = '+';
                 $bvLog->details  = $details;
                 $bvLog->save();
+
+                $posUser->total_team_dp = getAmount($posUser->total_team_dp + $bv, 8);
+                $posUser->save();
+                app(RankRewardService::class)->checkRankReward($posUser);
             }
             $id = $posId;
         } else {
@@ -700,6 +705,7 @@ function commissionRemarksForCapping()
     return [
         'referral_commission',
         'binary_commission',
+        'level_income',
     ];
 }
 
@@ -756,6 +762,11 @@ function getTreePlanBorderClass($planName)
         'royal pack' => 'plan-royal-pack',
         default => '',
     };
+}
+
+function getCurrentRankName($user)
+{
+    return $user?->currentRank?->name ?? 'N/A';
 }
 
 function showSingleUserinTree($user)

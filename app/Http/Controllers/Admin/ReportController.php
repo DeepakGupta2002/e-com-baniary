@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\BvLog;
+use App\Models\LevelIncomeLog;
 use App\Models\UserLogin;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -125,5 +126,26 @@ class ReportController extends Controller
         $transactions = $transactions->latest()->paginate(getPaginate());
 
         return view('admin.reports.transactions', compact('pageTitle', 'transactions'));
+    }
+
+    public function levelIncome(Request $request, $userId = null)
+    {
+        $pageTitle = 'Level Income History';
+        $logs = LevelIncomeLog::with(['receiver', 'source', 'matchingTransaction'])
+            ->searchable(['receiver:username,firstname,lastname', 'source:username,firstname,lastname'])
+            ->dateFilter()
+            ->orderByDesc('id');
+
+        if ($userId) {
+            $logs->where('receiver_user_id', $userId);
+        }
+
+        if ($request->level_no) {
+            $logs->where('level_no', $request->level_no);
+        }
+
+        $logs = $logs->paginate(getPaginate());
+
+        return view('admin.reports.level_income', compact('pageTitle', 'logs'));
     }
 }
