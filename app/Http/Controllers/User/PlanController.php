@@ -9,6 +9,7 @@ use App\Models\UserExtra;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\FastStartBonusService;
 
 class PlanController extends Controller
 {
@@ -41,6 +42,9 @@ class PlanController extends Controller
 
         $oldPlan             = $user->plan_id;
         $user->plan_id       = $plan->id;
+        if (!$user->plan_activated_at) {
+            $user->plan_activated_at = now();
+        }
         $user->balance      -= $plan->price;
         $user->total_invest += $plan->price;
         $user->save();
@@ -71,6 +75,8 @@ class PlanController extends Controller
         updateBV($user->id, $plan->bv, $details);
 
         referralComission($user->id, $details);
+
+        app(FastStartBonusService::class)->handlePlanActivation($user->fresh('plan'));
 
         $notify[] = ['success', 'Purchased ' . $plan->name . ' successfully'];
         return back()->withNotify($notify);

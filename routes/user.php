@@ -118,6 +118,10 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });
 
+            Route::controller('FastStartBonusController')->prefix('fast-start-bonus')->name('fast.start.bonus.')->group(function () {
+                Route::get('/', 'index')->name('index');
+            });
+
             Route::controller('RankRewardController')->prefix('rank-rewards')->name('rank.rewards.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });

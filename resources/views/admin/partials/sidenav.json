@@ -580,6 +580,19 @@
             },
             {
                 "keyword": [
+                    "Fast Start Bonus",
+                    "Fast start income",
+                    "Fast start reward",
+                    "Direct referral bonus"
+                ],
+                "title": "Fast Start Bonus",
+                "route_name": "admin.report.fast.start.bonus",
+                "menu_active": [
+                    "admin.report.fast.start.bonus"
+                ]
+            },
+            {
+                "keyword": [
                     "Login History",
                     "Report",
                     "Login report",

@@ -29,7 +29,10 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'kyc_data' => 'object',
-        'ver_code_send_at' => 'datetime'
+        'ver_code_send_at' => 'datetime',
+        'plan_activated_at' => 'datetime',
+        'fast_start_bonus_claimed' => 'boolean',
+        'fast_start_bonus_date' => 'datetime',
     ];
 
 
@@ -165,5 +168,10 @@ class User extends Authenticatable
     public function rankRewardLogs()
     {
         return $this->hasMany(RankRewardLog::class);
+    }
+
+    public function fastStartBonusLogs()
+    {
+        return $this->hasMany(FastStartBonusLog::class);
     }
 }

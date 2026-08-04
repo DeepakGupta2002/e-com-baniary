@@ -42,6 +42,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('user.fast.start.bonus.index') }}" class="{{menuActive('user.fast.start.bonus.index')}}">
+                                @lang('Fast Start Bonus')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('user.rank.rewards.index') }}" class="{{menuActive('user.rank.rewards.index')}}">
                                 @lang('Rank & Rewards')
                             </a>

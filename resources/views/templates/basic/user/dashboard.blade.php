@@ -234,6 +234,18 @@
                     <div class="dashboard-item">
                         <div class="dashboard-item-header">
                             <div class="header-left">
+                                <h6 class="title">@lang('Fast Start Bonus')</h6>
+                                <h3 class="ammount theme-one">{{ showAmount(auth()->user()->fast_start_bonus_amount) }}</h3>
+                            </div>
+                            <div class="icon"><i class="las la-bolt"></i></div>
+                        </div>
+                        <div class="dashboard-item-body"></div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
                                 <h6 class="title">@lang('Current Rank')</h6>
                                 <h3 class="ammount theme-one">{{ getCurrentRankName(auth()->user()) }}</h3>
                             </div>

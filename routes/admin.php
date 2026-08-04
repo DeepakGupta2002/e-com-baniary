@@ -168,6 +168,7 @@ Route::middleware('admin')->group(function () {
         Route::get('referral-commission/{user_id?}', 'refCom')->name('referral.commission');
         Route::get('binary-commission/{user_id?}', 'binaryCom')->name('binary.commission');
         Route::get('level-income/{user_id?}', 'levelIncome')->name('level.income');
+        Route::get('fast-start-bonus/{user_id?}', 'fastStartBonus')->name('fast.start.bonus');
     });
 
 

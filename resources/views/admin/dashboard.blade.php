@@ -188,6 +188,10 @@
             <x-widget value="{{ showAmount($widget['total_binary_com']) }}" title="Total Binary Commission" style="6"
                 link="{{ route('admin.report.binary.commission') }}" icon="fas la-tree" bg="7" outline="true" />
         </div>
+        <div class="col-xxl-3 col-sm-6">
+            <x-widget value="{{ showAmount($widget['total_fast_start_bonus']) }}" title="Total Fast Start Bonus Paid" style="6"
+                link="{{ route('admin.report.fast.start.bonus') }}" icon="las la-bolt" bg="11" outline="true" />
+        </div>
     </div><!-- row end-->
 
     <div class="row gy-4 mt-2">

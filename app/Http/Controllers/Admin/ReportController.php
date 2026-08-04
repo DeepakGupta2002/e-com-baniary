@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\BvLog;
+use App\Models\FastStartBonusLog;
 use App\Models\LevelIncomeLog;
 use App\Models\UserLogin;
 use App\Models\Transaction;
@@ -147,5 +148,22 @@ class ReportController extends Controller
         $logs = $logs->paginate(getPaginate());
 
         return view('admin.reports.level_income', compact('pageTitle', 'logs'));
+    }
+
+    public function fastStartBonus(Request $request, $userId = null)
+    {
+        $pageTitle = 'Fast Start Bonus Report';
+        $logs = FastStartBonusLog::with(['user.refBy', 'sponsor', 'transaction'])
+            ->searchable(['user:username,firstname,lastname', 'sponsor:username,firstname,lastname'])
+            ->dateFilter()
+            ->orderByDesc('id');
+
+        if ($userId) {
+            $logs->where('user_id', $userId);
+        }
+
+        $logs = $logs->paginate(getPaginate());
+
+        return view('admin.reports.fast_start_bonus', compact('pageTitle', 'logs'));
     }
 }

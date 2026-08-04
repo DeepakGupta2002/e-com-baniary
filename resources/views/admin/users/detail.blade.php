@@ -38,6 +38,9 @@
                     <x-widget type="2" value="{{ showAmount($user->total_rank_reward) }}" title="Total Rank Reward" style="7" link="{{ route('admin.rank.logs') }}?search={{ $user->username }}" icon="las la-trophy" bg="9" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ showAmount($user->fast_start_bonus_amount) }}" title="Fast Start Bonus" style="7" link="{{ route('admin.report.fast.start.bonus', $user->id) }}" icon="las la-bolt" bg="11" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
                     <x-widget type="2" value="{{ getAmount($totalBvCut) }}" title="Total Cut BV" style="7" link="{{ route('admin.report.bvLog', $user->id) }}?type=cutBV" icon="la la-cut" bg="4" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
@@ -113,6 +116,33 @@
                 </div>
             </div>
 
+            <div class="card mt-30">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">@lang('Fast Start Bonus')</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Claimed')</span>
+                            <span class="{{ $user->fast_start_bonus_claimed ? 'text--success' : 'text--danger' }}">
+                                {{ $user->fast_start_bonus_claimed ? __('Yes') : __('No') }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Bonus Amount')</span>
+                            <span>{{ showAmount($user->fast_start_bonus_amount) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Bonus Date')</span>
+                            <span>{{ $user->fast_start_bonus_date ? showDateTime($user->fast_start_bonus_date) : 'N/A' }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Plan Activation Date')</span>
+                            <span>{{ $user->plan_activated_at ? showDateTime($user->plan_activated_at) : 'N/A' }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
             <div class="row">
                 <div class="col-12 col-md-5 col-xxl-4">
