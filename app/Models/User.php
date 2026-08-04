@@ -33,6 +33,8 @@ class User extends Authenticatable
         'plan_activated_at' => 'datetime',
         'fast_start_bonus_claimed' => 'boolean',
         'fast_start_bonus_date' => 'datetime',
+        'leader_growth_cycle_start_at' => 'datetime',
+        'leader_growth_last_bonus_at' => 'datetime',
     ];
 
 
@@ -173,5 +175,10 @@ class User extends Authenticatable
     public function fastStartBonusLogs()
     {
         return $this->hasMany(FastStartBonusLog::class);
+    }
+
+    public function leaderGrowthBonusLogs()
+    {
+        return $this->hasMany(LeaderGrowthBonusLog::class);
     }
 }

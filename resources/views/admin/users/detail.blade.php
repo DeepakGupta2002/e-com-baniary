@@ -41,6 +41,9 @@
                     <x-widget type="2" value="{{ showAmount($user->fast_start_bonus_amount) }}" title="Fast Start Bonus" style="7" link="{{ route('admin.report.fast.start.bonus', $user->id) }}" icon="las la-bolt" bg="11" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ showAmount($user->leader_growth_total_bonus) }}" title="Leader Growth Bonus" style="7" link="{{ route('admin.report.leader.growth.bonus', $user->id) }}" icon="las la-chart-line" bg="12" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
                     <x-widget type="2" value="{{ getAmount($totalBvCut) }}" title="Total Cut BV" style="7" link="{{ route('admin.report.bvLog', $user->id) }}?type=cutBV" icon="la la-cut" bg="4" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
@@ -113,6 +116,36 @@
                     <a class="btn btn--info btn--shadow btn-block btn-lg w-100" href="{{ route('admin.users.referral', $user->id) }}">
                         @lang('User Referrals')
                     </a>
+                </div>
+            </div>
+
+            <div class="card mt-30">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">@lang('Leader Growth Bonus')</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Total Bonus')</span>
+                            <span>{{ showAmount($user->leader_growth_total_bonus) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Bonus Count')</span>
+                            <span>{{ $user->leader_growth_bonus_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Current Cycle Business')</span>
+                            <span>{{ showAmount($user->leader_growth_current_business) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Current Cycle Start')</span>
+                            <span>{{ $user->leader_growth_cycle_start_at ? showDateTime($user->leader_growth_cycle_start_at) : 'N/A' }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Last Bonus Date')</span>
+                            <span>{{ $user->leader_growth_last_bonus_at ? showDateTime($user->leader_growth_last_bonus_at) : 'N/A' }}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 

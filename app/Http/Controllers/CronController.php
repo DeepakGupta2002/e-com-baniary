@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\CronJob;
 use App\Models\GeneralSetting;
 use App\Services\LevelIncomeService;
+use App\Services\LeaderGrowthBonusService;
 use App\Lib\CurlRequest;
 use App\Constants\Status;
 use App\Models\UserExtra;
@@ -149,6 +150,8 @@ class CronController extends Controller
                 $trx->trx = getTrx();
                 $trx->details = 'Paid ' . showAmount($creditAmount) . ' For ' . $consumedBv . ' matched BV.' . ($isCapped ? ' Remaining matching BV carried forward due to capping.' : '');
                 $trx->save();
+
+                app(LeaderGrowthBonusService::class)->handleMatchingPaid($payment, $trx, (float) $consumedBv);
 
                 if ($isCapped) {
                     $uex->bv_left = max(0, getAmount($uex->bv_left - $consumedBv, 8));

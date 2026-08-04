@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\BvLog;
 use App\Models\FastStartBonusLog;
+use App\Models\LeaderGrowthBonusLog;
 use App\Models\LevelIncomeLog;
 use App\Models\UserLogin;
 use App\Models\Transaction;
@@ -165,5 +166,23 @@ class ReportController extends Controller
         $logs = $logs->paginate(getPaginate());
 
         return view('admin.reports.fast_start_bonus', compact('pageTitle', 'logs'));
+    }
+
+    public function leaderGrowthBonus(Request $request, $userId = null)
+    {
+        $pageTitle = 'Leader Growth Bonus Report';
+        $logs = LeaderGrowthBonusLog::with(['user', 'matchingTransaction', 'walletTransaction'])
+            ->where('status', 'paid')
+            ->searchable(['user:username,firstname,lastname'])
+            ->dateFilter()
+            ->orderByDesc('id');
+
+        if ($userId) {
+            $logs->where('user_id', $userId);
+        }
+
+        $logs = $logs->paginate(getPaginate());
+
+        return view('admin.reports.leader_growth_bonus', compact('pageTitle', 'logs'));
     }
 }

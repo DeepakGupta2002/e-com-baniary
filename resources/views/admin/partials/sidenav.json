@@ -593,6 +593,19 @@
             },
             {
                 "keyword": [
+                    "Leader Growth Bonus",
+                    "Leader growth income",
+                    "Recurring matching bonus",
+                    "Growth reward"
+                ],
+                "title": "Leader Growth Bonus",
+                "route_name": "admin.report.leader.growth.bonus",
+                "menu_active": [
+                    "admin.report.leader.growth.bonus"
+                ]
+            },
+            {
+                "keyword": [
                     "Login History",
                     "Report",
                     "Login report",

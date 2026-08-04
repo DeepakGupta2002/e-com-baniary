@@ -122,6 +122,10 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });
 
+            Route::controller('LeaderGrowthBonusController')->prefix('leader-growth-bonus')->name('leader.growth.bonus.')->group(function () {
+                Route::get('/', 'index')->name('index');
+            });
+
             Route::controller('RankRewardController')->prefix('rank-rewards')->name('rank.rewards.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });

@@ -242,6 +242,23 @@
                         <div class="dashboard-item-body"></div>
                     </div>
                 </div>
+                @php
+                    $leaderGrowthTarget = \App\Services\LeaderGrowthBonusService::TARGET_BUSINESS;
+                    $leaderGrowthBusiness = (float) auth()->user()->leader_growth_current_business;
+                @endphp
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
+                                <h6 class="title">@lang('Leader Growth Bonus')</h6>
+                                <h3 class="ammount theme-one">{{ showAmount(auth()->user()->leader_growth_total_bonus) }}</h3>
+                                <small>@lang('Progress'): {{ showAmount($leaderGrowthBusiness) }} / {{ showAmount($leaderGrowthTarget) }}</small>
+                            </div>
+                            <div class="icon"><i class="las la-chart-line"></i></div>
+                        </div>
+                        <div class="dashboard-item-body"></div>
+                    </div>
+                </div>
                 <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
                     <div class="dashboard-item">
                         <div class="dashboard-item-header">

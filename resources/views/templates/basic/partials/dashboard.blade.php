@@ -47,6 +47,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('user.leader.growth.bonus.index') }}" class="{{menuActive('user.leader.growth.bonus.index')}}">
+                                @lang('Leader Growth Bonus')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('user.rank.rewards.index') }}" class="{{menuActive('user.rank.rewards.index')}}">
                                 @lang('Rank & Rewards')
                             </a>
