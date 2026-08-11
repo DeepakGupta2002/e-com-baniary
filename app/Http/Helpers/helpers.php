@@ -784,7 +784,7 @@ function showSingleUserinTree($user)
             $userType = trim("paid-user $planBorderClass");
         }
         $img   = getImage('assets/images/user/profile/' . $user->image, '120x120', true);
-        $refby = getUserById($user->ref_id)->fullname ?? '';
+        $refby = getUserById($user->ref_by)->fullname ?? '';
         $hisTree = '';
         if (!empty($user->username)) {
             if (auth()->guard('admin')->user()) {

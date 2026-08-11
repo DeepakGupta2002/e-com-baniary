@@ -606,6 +606,19 @@
             },
             {
                 "keyword": [
+                    "Repurchase Matching",
+                    "Repurchase matching income",
+                    "Product matching bonus",
+                    "Repurchase bonus"
+                ],
+                "title": "Repurchase Matching",
+                "route_name": "admin.report.repurchase.matching",
+                "menu_active": [
+                    "admin.report.repurchase.matching"
+                ]
+            },
+            {
+                "keyword": [
                     "Login History",
                     "Report",
                     "Login report",

@@ -196,6 +196,10 @@
             <x-widget value="{{ showAmount($widget['total_leader_growth_bonus']) }}" title="Total Leader Growth Bonus Paid" style="6"
                 link="{{ route('admin.report.leader.growth.bonus') }}" icon="las la-chart-line" bg="13" outline="true" />
         </div>
+        <div class="col-xxl-3 col-sm-6">
+            <x-widget value="{{ showAmount($widget['total_repurchase_matching_income']) }}" title="Total Repurchase Matching Income Paid" style="6"
+                link="{{ route('admin.report.repurchase.matching') }}" icon="las la-sync" bg="16" outline="true" />
+        </div>
     </div><!-- row end-->
 
     <div class="row gy-4 mt-2">

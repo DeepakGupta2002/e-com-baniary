@@ -7,6 +7,8 @@ use App\Constants\Status;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\RepurchaseBVService;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -29,42 +31,54 @@ class OrderController extends Controller
             'status' => 'required|in:1,2'
         ]);
 
-        $order   = Order::where('status', Status::ORDER_PENDING)->findOrFail($id);
+        $order = null;
+        $template = null;
+
+        DB::transaction(function () use ($request, $id, &$order, &$template) {
+            $order   = Order::where('status', Status::ORDER_PENDING)->lockForUpdate()->findOrFail($id);
+            $product = $order->product;
+            $user    = $order->user;
+
+            if ($request->status == Status::ORDER_SHIPPED) {
+                $order->status = Status::ORDER_SHIPPED;
+
+                if (!$order->repurchase_processed_at) {
+                    app(RepurchaseBVService::class)->processOrder($order);
+                    $order->repurchase_processed_at = now();
+                }
+
+                $template = 'ORDER_SHIPPED';
+            } else {
+                $order->status  = Status::ORDER_CANCELED;
+                $user->balance += $order->total_price;
+                $user->save();
+
+                $transaction               = new Transaction();
+                $transaction->user_id      = $order->user_id;
+                $transaction->amount       = $order->total_price;
+                $transaction->post_balance = $user->balance;
+                $transaction->charge       = 0;
+                $transaction->trx_type     = '+';
+                $transaction->details      = $product->name . ' Order cancel';
+                $transaction->trx          = $order->trx;
+                $transaction->save();
+
+                $product->quantity += $order->quantity;
+                $product->save();
+
+                $template = 'ORDER_CANCELED';
+            }
+
+            $order->save();
+        });
+
+        $order->loadMissing(['product', 'user']);
         $product = $order->product;
-        $user    = $order->user;
-
-        if ($request->status == Status::ORDER_SHIPPED) {
-            $order->status = Status::ORDER_SHIPPED;
-            $details       = $product->name . ' product purchase';
-            updateBV($user->id, $product->bv, $details);
-            $template = 'ORDER_SHIPPED';
-        } else {
-            
-            $order->status  = Status::ORDER_CANCELED;
-            $user->balance += $order->total_price;
-            $user->save();
-
-            $transaction               = new Transaction();
-            $transaction->user_id      = $order->user_id;
-            $transaction->amount       = $order->total_price;
-            $transaction->post_balance = $user->balance;
-            $transaction->charge       = 0;
-            $transaction->trx_type     = '+';
-            $transaction->details      = $product->name . ' Order cancel';
-            $transaction->trx          = $order->trx;
-            $transaction->save();
-
-            $product->quantity += $order->quantity;
-            $product->save();
-
-            $template = 'ORDER_CANCELED';
-        }
-
-        $order->save();
+        $user = $order->user;
 
         notify($user, $template, [
             'product_name' => $product->name,
-            'quantity'     => $request->quantity,
+            'quantity'     => $order->quantity,
             'price'        => showAmount($product->price, currencyFormat: false),
             'total_price'  => showAmount($order->total_price, currencyFormat: false),
             'trx'          => $order->trx,

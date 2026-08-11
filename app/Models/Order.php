@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Order extends Model
 {
+    protected $casts = [
+        'repurchase_processed_at' => 'datetime',
+    ];
+
     public function product()
     {
         return $this->belongsTo(Product::class);

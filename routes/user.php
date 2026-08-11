@@ -126,6 +126,10 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });
 
+            Route::controller('RepurchaseMatchingController')->prefix('repurchase-matching')->name('repurchase.matching.')->group(function () {
+                Route::get('/', 'index')->name('index');
+            });
+
             Route::controller('RankRewardController')->prefix('rank-rewards')->name('rank.rewards.')->group(function () {
                 Route::get('/', 'index')->name('index');
             });

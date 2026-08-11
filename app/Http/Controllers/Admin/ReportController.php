@@ -6,6 +6,7 @@ use App\Models\BvLog;
 use App\Models\FastStartBonusLog;
 use App\Models\LeaderGrowthBonusLog;
 use App\Models\LevelIncomeLog;
+use App\Models\RepurchaseMatchingLog;
 use App\Models\UserLogin;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -60,7 +61,7 @@ class ReportController extends Controller
     public function invest(Request $request, $userId = null)
     {
         $pageTitle    = 'Invest Logs';
-        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'purchased_plan')->with('user');
+        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'purchased_plan')->dateFilter()->with('user');
         if ($userId) {
             $transactions = $transactions->where('user_id', $userId);
         }
@@ -109,7 +110,7 @@ class ReportController extends Controller
     public function refCom(Request $request, $userId = null)
     {
         $pageTitle    = 'Referral Commission Logs';
-        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'referral_commission')->with('user');
+        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'referral_commission')->dateFilter()->with('user');
         if ($userId) {
             $transactions = $transactions->where('user_id', $userId);
         }
@@ -121,7 +122,7 @@ class ReportController extends Controller
     public function binaryCom(Request $request, $userId = null)
     {
         $pageTitle    = 'Binary Commission Logs';
-        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'binary_commission')->with('user');
+        $transactions = Transaction::searchable(['trx', 'user:username'])->where('remark', 'binary_commission')->dateFilter()->with('user');
         if ($userId) {
             $transactions = $transactions->where('user_id', $userId);
         }
@@ -184,5 +185,22 @@ class ReportController extends Controller
         $logs = $logs->paginate(getPaginate());
 
         return view('admin.reports.leader_growth_bonus', compact('pageTitle', 'logs'));
+    }
+
+    public function repurchaseMatching(Request $request, $userId = null)
+    {
+        $pageTitle = 'Repurchase Matching Report';
+        $logs = RepurchaseMatchingLog::with(['user', 'order', 'transaction'])
+            ->searchable(['user:username,firstname,lastname'])
+            ->dateFilter()
+            ->orderByDesc('id');
+
+        if ($userId) {
+            $logs->where('user_id', $userId);
+        }
+
+        $logs = $logs->paginate(getPaginate());
+
+        return view('admin.reports.repurchase_matching', compact('pageTitle', 'logs'));
     }
 }

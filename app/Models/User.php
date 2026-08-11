@@ -181,4 +181,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(LeaderGrowthBonusLog::class);
     }
+
+    public function repurchaseBvLogs()
+    {
+        return $this->hasMany(RepurchaseBvLog::class);
+    }
+
+    public function repurchaseMatchingLogs()
+    {
+        return $this->hasMany(RepurchaseMatchingLog::class);
+    }
 }

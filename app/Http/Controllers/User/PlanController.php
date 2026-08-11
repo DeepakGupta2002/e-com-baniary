@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\FastStartBonusService;
+use Illuminate\Support\Facades\DB;
 
 class PlanController extends Controller
 {
@@ -26,59 +27,71 @@ class PlanController extends Controller
             'plan_id' => 'required|integer',
         ]);
 
-        $plan = Plan::active()->where('id', $request->plan_id)->find($request->plan_id);
+        $result = DB::transaction(function () use ($request) {
+            $plan = Plan::active()->lockForUpdate()->find($request->plan_id);
 
-        if (!$plan) {
-            $notify[] = ['error', 'The plan is currently unavailable'];
+            if (!$plan) {
+                return ['status' => 'error', 'message' => 'The plan is currently unavailable'];
+            }
+
+            $user = User::lockForUpdate()->find(auth()->id());
+
+            if ($user->balance < $plan->price) {
+                return ['status' => 'error', 'message' => 'Insufficient Balance'];
+            }
+
+            $oldPlan             = $user->plan_id;
+            $user->plan_id       = $plan->id;
+            if (!$user->plan_activated_at) {
+                $user->plan_activated_at = now();
+            }
+            $user->balance      -= $plan->price;
+            $user->total_invest += $plan->price;
+            $user->save();
+
+            $trx               = new Transaction();
+            $trx->user_id      = $user->id;
+            $trx->amount       = $plan->price;
+            $trx->trx_type     = '-';
+            $trx->details      = 'Purchased ' . $plan->name;
+            $trx->remark       = 'purchased_plan';
+            $trx->trx          = getTrx();
+            $trx->post_balance = $user->balance;
+            $trx->save();
+
+            if ($oldPlan == 0) {
+                updatePaidCount($user->id);
+            }
+
+            $details = $user->username . ' Subscribed to ' . $plan->name . ' plan.';
+
+            updateBV($user->id, $plan->bv, $details);
+
+            referralComission($user->id, $details);
+
+            return [
+                'status' => 'success',
+                'user' => $user,
+                'plan' => $plan,
+                'trx' => $trx,
+            ];
+        });
+
+        if ($result['status'] !== 'success') {
+            $notify[] = ['error', $result['message']];
             return back()->withNotify($notify);
         }
 
-        $user = auth()->user();
-
-        if ($user->balance < $plan->price) {
-            $notify[] = ['error', 'Insufficient Balance'];
-            return back()->withNotify($notify);
-        }
-
-        $oldPlan             = $user->plan_id;
-        $user->plan_id       = $plan->id;
-        if (!$user->plan_activated_at) {
-            $user->plan_activated_at = now();
-        }
-        $user->balance      -= $plan->price;
-        $user->total_invest += $plan->price;
-        $user->save();
-
-        $trx               = new Transaction();
-        $trx->user_id      = $user->id;
-        $trx->amount       = $plan->price;
-        $trx->trx_type     = '-';
-        $trx->details      = 'Purchased ' . $plan->name;
-        $trx->remark       = 'purchased_plan';
-        $trx->trx          = getTrx();
-        $trx->post_balance = $user->balance;
-        $trx->save();
-
-        notify($user, 'PLAN_PURCHASED', [
-            'plan'         => $plan->name,
-            'amount'       => showAmount($plan->price, currencyFormat: false),
-            'trx'          => $trx->trx,
-            'post_balance' => showAmount($user->balance, currencyFormat: false),
+        notify($result['user'], 'PLAN_PURCHASED', [
+            'plan'         => $result['plan']->name,
+            'amount'       => showAmount($result['plan']->price, currencyFormat: false),
+            'trx'          => $result['trx']->trx,
+            'post_balance' => showAmount($result['user']->balance, currencyFormat: false),
         ]);
 
-        if ($oldPlan == 0) {
-            updatePaidCount($user->id);
-        }
+        app(FastStartBonusService::class)->handlePlanActivation($result['user']->fresh('plan'));
 
-        $details = auth()->user()->username . ' Subscribed to ' . $plan->name . ' plan.';
-
-        updateBV($user->id, $plan->bv, $details);
-
-        referralComission($user->id, $details);
-
-        app(FastStartBonusService::class)->handlePlanActivation($user->fresh('plan'));
-
-        $notify[] = ['success', 'Purchased ' . $plan->name . ' successfully'];
+        $notify[] = ['success', 'Purchased ' . $result['plan']->name . ' successfully'];
         return back()->withNotify($notify);
     }
 

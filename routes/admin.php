@@ -170,6 +170,7 @@ Route::middleware('admin')->group(function () {
         Route::get('level-income/{user_id?}', 'levelIncome')->name('level.income');
         Route::get('fast-start-bonus/{user_id?}', 'fastStartBonus')->name('fast.start.bonus');
         Route::get('leader-growth-bonus/{user_id?}', 'leaderGrowthBonus')->name('leader.growth.bonus');
+        Route::get('repurchase-matching/{user_id?}', 'repurchaseMatching')->name('repurchase.matching');
     });
 
 
@@ -359,7 +360,7 @@ Route::middleware('admin')->group(function () {
     Route::controller(RankController::class)->name('rank.')->prefix('rank')->group(function () {
         Route::get('index', 'index')->name('index');
         Route::post('store/{id?}', 'store')->name('store');
-        Route::post('status/{id}', 'RankController@status')->name('status');
+        Route::post('status/{id}', 'status')->name('status');
         Route::get('logs', 'logs')->name('logs');
         Route::get('leaderboard', 'leaderboard')->name('leaderboard');
     });

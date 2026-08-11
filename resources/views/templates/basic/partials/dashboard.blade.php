@@ -52,6 +52,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('user.repurchase.matching.index') }}" class="{{menuActive('user.repurchase.matching.index')}}">
+                                @lang('Repurchase Matching')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('user.rank.rewards.index') }}" class="{{menuActive('user.rank.rewards.index')}}">
                                 @lang('Rank & Rewards')
                             </a>

@@ -117,8 +117,13 @@ class ManageUsersController extends Controller
     }
 
 
-    public function detail($id)
+    public function detail($id = null)
     {
+        if (!$id) {
+            $notify[] = ['error', 'Please select a user to view details'];
+            return to_route('admin.users.all')->withNotify($notify);
+        }
+
         $user      = User::findOrFail($id);
         $pageTitle = 'User Detail - ' . $user->username;
 

@@ -67,6 +67,7 @@ class AdminController extends Controller
         $widget['total_binary_com'] = Transaction::where('remark', 'binary_commission')->sum('amount');
         $widget['total_fast_start_bonus'] = Transaction::where('remark', 'fast_start_bonus')->sum('amount');
         $widget['total_leader_growth_bonus'] = Transaction::where('remark', 'leader_growth_bonus')->sum('amount');
+        $widget['total_repurchase_matching_income'] = Transaction::where('remark', 'repurchase_matching_income')->sum('amount');
 
         return view('admin.dashboard', compact('pageTitle', 'widget', 'chart','deposit','withdrawals','bv'));
     }

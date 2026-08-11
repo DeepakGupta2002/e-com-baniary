@@ -44,6 +44,9 @@
                     <x-widget type="2" value="{{ showAmount($user->leader_growth_total_bonus) }}" title="Leader Growth Bonus" style="7" link="{{ route('admin.report.leader.growth.bonus', $user->id) }}" icon="las la-chart-line" bg="12" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
+                    <x-widget type="2" value="{{ showAmount($user->total_repurchase_matching_income) }}" title="Repurchase Matching" style="7" link="{{ route('admin.report.repurchase.matching', $user->id) }}" icon="las la-sync" bg="18" />
+                </div>
+                <div class="col-xxl-3 col-sm-6">
                     <x-widget type="2" value="{{ getAmount($totalBvCut) }}" title="Total Cut BV" style="7" link="{{ route('admin.report.bvLog', $user->id) }}?type=cutBV" icon="la la-cut" bg="4" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
@@ -144,6 +147,36 @@
                         <li class="list-group-item d-flex justify-content-between">
                             <span>@lang('Last Bonus Date')</span>
                             <span>{{ $user->leader_growth_last_bonus_at ? showDateTime($user->leader_growth_last_bonus_at) : 'N/A' }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-30">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">@lang('Repurchase Matching')</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Total Income')</span>
+                            <span>{{ showAmount($user->total_repurchase_matching_income) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Left BV')</span>
+                            <span>{{ getAmount($user->repurchase_left_bv) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Right BV')</span>
+                            <span>{{ getAmount($user->repurchase_right_bv) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Carry Left')</span>
+                            <span>{{ getAmount($user->repurchase_left_carry) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@lang('Carry Right')</span>
+                            <span>{{ getAmount($user->repurchase_right_carry) }}</span>
                         </li>
                     </ul>
                 </div>

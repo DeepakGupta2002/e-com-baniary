@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Lib\GoogleAuthenticator;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -258,55 +259,74 @@ class UserController extends Controller
             'product_id' => 'required|integer|gt:0'
         ]);
 
-        $product = Product::hasCategory()->active()->find($request->product_id);
+        $result = DB::transaction(function () use ($request) {
+            $user = User::lockForUpdate()->find(auth()->id());
+            $product = Product::hasCategory()->active()->lockForUpdate()->find($request->product_id);
 
-        if (!$product) {
-            $notify[] = ['error', 'Product not found'];
+            if (!$product) {
+                return ['status' => 'error', 'message' => 'Product not found'];
+            }
+
+            if ($user->status != Status::USER_ACTIVE || !$user->plan_id || (int) $user->plan_id <= 0) {
+                return ['status' => 'error', 'message' => 'Please activate your MLM plan before purchasing repurchase products.'];
+            }
+
+            if ($request->quantity > $product->quantity) {
+                return ['status' => 'error', 'message' => 'Requested quantity is not available in stock'];
+            }
+
+            $totalPrice = $product->price * $request->quantity;
+            if ($user->balance < $totalPrice) {
+                return ['status' => 'error', 'message' => 'Balance is not sufficient'];
+            }
+
+            $user->balance -= $totalPrice;
+            $user->save();
+
+            $product->quantity -= $request->quantity;
+            $product->save();
+
+            $transaction               = new Transaction();
+            $transaction->user_id      = $user->id;
+            $transaction->amount       = $totalPrice;
+            $transaction->post_balance = $user->balance;
+            $transaction->charge       = 0;
+            $transaction->trx_type     = '-';
+            $transaction->details      = $product->name . ' item purchase';
+            $transaction->trx          = getTrx();
+            $transaction->save();
+
+            $order              = new Order();
+            $order->user_id     = $user->id;
+            $order->product_id  = $product->id;
+            $order->quantity    = $request->quantity;
+            $order->price       = $product->price;
+            $order->total_price = $totalPrice;
+            $order->trx         = $transaction->trx;
+            $order->status      = 0;
+            $order->save();
+
+            return [
+                'status' => 'success',
+                'user' => $user,
+                'product' => $product,
+                'quantity' => $request->quantity,
+                'total_price' => $totalPrice,
+                'trx' => $transaction->trx,
+            ];
+        });
+
+        if ($result['status'] !== 'success') {
+            $notify[] = ['error', $result['message']];
             return back()->withNotify($notify);
         }
 
-        if ($request->quantity > $product->quantity) {
-            $notify[] = ['error', 'Requested quantity is not available in stock'];
-            return back()->withNotify($notify);
-        }
-        $user       = auth()->user();
-        $totalPrice = $product->price * $request->quantity;
-        if ($user->balance < $totalPrice) {
-            $notify[] = ['error', 'Balance is not sufficient'];
-            return back()->withNotify($notify);
-        }
-        $user->balance -= $totalPrice;
-        $user->save();
-
-        $product->quantity -= $request->quantity;
-        $product->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $totalPrice;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = '-';
-        $transaction->details      = $product->name . ' item purchase';
-        $transaction->trx          = getTrx();
-        $transaction->save();
-
-        $order              = new Order();
-        $order->user_id     = $user->id;
-        $order->product_id  = $product->id;
-        $order->quantity    = $request->quantity;
-        $order->price       = $product->price;
-        $order->total_price = $totalPrice;
-        $order->trx         = $transaction->trx;
-        $order->status      = 0;
-        $order->save();
-
-        notify($user, 'ORDER_PLACED', [
-            'product_name' => $product->name,
-            'quantity'     => $request->quantity,
-            'price'        => showAmount($product->price, currencyFormat: false),
-            'total_price'  => showAmount($totalPrice, currencyFormat: false),
-            'trx'          => $transaction->trx,
+        notify($result['user'], 'ORDER_PLACED', [
+            'product_name' => $result['product']->name,
+            'quantity'     => $result['quantity'],
+            'price'        => showAmount($result['product']->price, currencyFormat: false),
+            'total_price'  => showAmount($result['total_price'], currencyFormat: false),
+            'trx'          => $result['trx'],
         ]);
 
         $notify[] = ['success', 'Order placed successfully'];
