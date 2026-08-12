@@ -252,7 +252,12 @@
                             <div class="header-left">
                                 <h6 class="title">@lang('Leader Growth Bonus')</h6>
                                 <h3 class="ammount theme-one">{{ showAmount(auth()->user()->leader_growth_total_bonus) }}</h3>
-                                <small>@lang('Progress'): {{ showAmount($leaderGrowthBusiness) }} / {{ showAmount($leaderGrowthTarget) }}</small>
+                                @if($pendingLeaderGrowthBonus)
+                                    <small>@lang('Pending Payout'): {{ showAmount($pendingLeaderGrowthBonus->bonus_amount) }}</small><br>
+                                    <small>@lang('Payout Date'): {{ showDateTime($pendingLeaderGrowthBonus->cycle_end) }}</small>
+                                @else
+                                    <small>@lang('Progress'): {{ showAmount($leaderGrowthBusiness) }} / {{ showAmount($leaderGrowthTarget) }}</small>
+                                @endif
                             </div>
                             <div class="icon"><i class="las la-chart-line"></i></div>
                         </div>
@@ -266,7 +271,7 @@
                                 <h6 class="title">@lang('Repurchase Matching Income')</h6>
                                 <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_repurchase_matching_income) }}</h3>
                                 <small>@lang('Left BV'): {{ getAmount(auth()->user()->repurchase_left_bv) }} | @lang('Right BV'): {{ getAmount(auth()->user()->repurchase_right_bv) }}</small><br>
-                                <small>@lang('Carry'): {{ getAmount(auth()->user()->repurchase_left_carry) }} / {{ getAmount(auth()->user()->repurchase_right_carry) }}</small>
+                                <small>@lang('Settlement'): @lang('Month End') | @lang('Carry Forward'): @lang('No')</small>
                             </div>
                             <div class="icon"><i class="las la-sync"></i></div>
                         </div>

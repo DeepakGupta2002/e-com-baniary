@@ -12,7 +12,7 @@ class LeaderGrowthBonusController extends Controller
         $pageTitle = 'Leader Growth Bonus History';
         $logs = LeaderGrowthBonusLog::with(['matchingTransaction', 'walletTransaction'])
             ->where('user_id', auth()->id())
-            ->where('status', 'paid')
+            ->whereIn('status', ['pending', 'paid'])
             ->orderByDesc('id')
             ->paginate(getPaginate());
 

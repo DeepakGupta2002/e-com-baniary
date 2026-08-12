@@ -11,12 +11,12 @@
                     <thead>
                         <tr>
                             <th>@lang('Date')</th>
-                            <th>@lang('Order ID')</th>
+                            <th>@lang('Period')</th>
                             <th>@lang('Left BV')</th>
                             <th>@lang('Right BV')</th>
                             <th>@lang('Matched BV')</th>
                             <th>@lang('Income')</th>
-                            <th>@lang('Carry')</th>
+                            <th>@lang('Carry Forward')</th>
                             <th>@lang('Transaction ID')</th>
                             <th>@lang('Status')</th>
                         </tr>
@@ -25,12 +25,18 @@
                         @forelse($logs as $log)
                             <tr>
                                 <td>{{ showDateTime($log->created_at) }}</td>
-                                <td>{{ $log->order_id }}</td>
+                                <td>
+                                    @if($log->period_start && $log->period_end)
+                                        {{ showDateTime($log->period_start, 'M Y') }}
+                                    @else
+                                        {{ $log->order_id }}
+                                    @endif
+                                </td>
                                 <td>{{ getAmount($log->left_bv) }}</td>
                                 <td>{{ getAmount($log->right_bv) }}</td>
                                 <td>{{ getAmount($log->matched_bv) }}</td>
                                 <td>{{ showAmount($log->income) }}</td>
-                                <td>{{ getAmount($log->carry_left) }} / {{ getAmount($log->carry_right) }}</td>
+                                <td>@lang('No')</td>
                                 <td>{{ $log->transaction?->trx ?? 'N/A' }}</td>
                                 <td>@php echo $log->statusBadge; @endphp</td>
                             </tr>

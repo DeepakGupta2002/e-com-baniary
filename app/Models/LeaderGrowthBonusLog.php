@@ -45,6 +45,7 @@ class LeaderGrowthBonusLog extends Model
         return new Attribute(function () {
             return match ($this->status) {
                 'paid' => '<span class="badge badge--success">' . __('Paid') . '</span>',
+                'pending' => '<span class="badge badge--warning">' . __('Pending Payout') . '</span>',
                 'processed' => '<span class="badge badge--info">' . __('Processed') . '</span>',
                 default => '<span class="badge badge--dark">' . __(keyToTitle($this->status)) . '</span>',
             };

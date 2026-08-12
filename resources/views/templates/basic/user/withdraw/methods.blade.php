@@ -7,6 +7,9 @@
     </div>
     <div class="card custom--card">
         <div class="card-body">
+            <div class="alert alert-info">
+                <i class="las la-info-circle"></i> @lang('Withdrawal requests can be submitted anytime. Withdrawals can only be approved on Friday.')
+            </div>
             <form action="{{ route('user.withdraw.money') }}" method="post" class="withdraw-form">
                 @csrf
                 <div class="gateway-card">

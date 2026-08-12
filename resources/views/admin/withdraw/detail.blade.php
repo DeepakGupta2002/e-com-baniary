@@ -99,6 +99,9 @@
 
 
                     @if ($withdrawal->status == Status::PAYMENT_PENDING)
+                        <div class="alert alert-info mt-4">
+                            <i class="las la-calendar-check"></i> @lang('Withdrawals can only be approved on Friday.')
+                        </div>
                         <div class="row mt-4">
                             <div class="col-md-12">
                                 <button class="btn btn-outline--success btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#approveModal">
@@ -133,6 +136,9 @@
                     @csrf
                     <input type="hidden" name="id" value="{{ $withdrawal->id }}">
                     <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="las la-calendar-check"></i> @lang('Withdrawals can only be approved on Friday.')
+                        </div>
                         <p>@lang('Have you sent') <span class="fw-bold text--success">{{ showAmount($withdrawal->final_amount, currencyFormat: false) }}
                                 {{ $withdrawal->currency }}</span>?</p>
                         <textarea name="details" class="form-control" value="{{ old('details') }}" rows="3" placeholder="@lang('Provide the details. eg: transaction number')" required></textarea>

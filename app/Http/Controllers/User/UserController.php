@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Rank;
 use App\Models\Deposit;
 use App\Models\Product;
+use App\Models\LeaderGrowthBonusLog;
 use App\Constants\Status;
 use App\Lib\FormProcessor;
 use App\Models\Withdrawal;
@@ -33,7 +34,13 @@ class UserController extends Controller
         $totalRef         = User::where('ref_by', auth()->id())->count();
         $totalBvCut       = BvLog::where('user_id', auth()->id())->where('trx_type', '-')->sum('amount');
         $ranks            = Rank::where('status', 1)->orderBy('sort_order')->orderBy('required_team_dp')->get();
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks'));
+        $pendingLeaderGrowthBonus = LeaderGrowthBonusLog::where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->whereNotNull('cycle_end')
+            ->latest('id')
+            ->first();
+
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus'));
     }
 
     public function depositHistory(Request $request)

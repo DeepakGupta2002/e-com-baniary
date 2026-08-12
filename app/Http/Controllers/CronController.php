@@ -8,6 +8,7 @@ use App\Models\CronJob;
 use App\Models\GeneralSetting;
 use App\Services\LevelIncomeService;
 use App\Services\LeaderGrowthBonusService;
+use App\Services\RepurchaseMatchingService;
 use App\Lib\CurlRequest;
 use App\Constants\Status;
 use App\Models\UserExtra;
@@ -22,6 +23,9 @@ class CronController extends Controller
         $general            = gs();
         $general->last_cron = now();
         $general->save();
+
+        app(RepurchaseMatchingService::class)->settleDueMonth();
+        app(LeaderGrowthBonusService::class)->releaseDueBonuses();
         
         $crons = CronJob::with('schedule');
 

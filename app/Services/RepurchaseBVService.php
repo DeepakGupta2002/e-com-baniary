@@ -8,10 +8,6 @@ use App\Models\User;
 
 class RepurchaseBVService
 {
-    public function __construct(private RepurchaseMatchingService $matchingService)
-    {
-    }
-
     public function processOrder(Order $order): void
     {
         $order->loadMissing(['product', 'user']);
@@ -36,7 +32,6 @@ class RepurchaseBVService
 
             if ((int) $upline->plan_id > 0) {
                 $this->addRepurchaseBv($upline, $order, $currentUser, $bv);
-                $this->matchingService->process($upline, $order);
             }
 
             $currentUserId = $upline->id;
@@ -49,10 +44,8 @@ class RepurchaseBVService
 
         if ($side === 'left') {
             $upline->repurchase_left_bv = getAmount((float) $upline->repurchase_left_bv + $bv, 8);
-            $upline->repurchase_left_carry = getAmount((float) $upline->repurchase_left_carry + $bv, 8);
         } else {
             $upline->repurchase_right_bv = getAmount((float) $upline->repurchase_right_bv + $bv, 8);
-            $upline->repurchase_right_carry = getAmount((float) $upline->repurchase_right_carry + $bv, 8);
         }
 
         $upline->save();

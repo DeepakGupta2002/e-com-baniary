@@ -9,7 +9,7 @@
                         <tr>
                             <th>@lang('Date')</th>
                             <th>@lang('Username')</th>
-                            <th>@lang('Order ID')</th>
+                            <th>@lang('Period')</th>
                             <th>@lang('Matched BV')</th>
                             <th>@lang('Income')</th>
                             <th>@lang('Transaction ID')</th>
@@ -21,7 +21,13 @@
                             <tr>
                                 <td>{{ showDateTime($log->created_at) }}</td>
                                 <td><span class="fw-bold">{{ $log->user?->username }}</span></td>
-                                <td>{{ $log->order_id }}</td>
+                                <td>
+                                    @if($log->period_start && $log->period_end)
+                                        {{ showDateTime($log->period_start, 'M Y') }}
+                                    @else
+                                        {{ $log->order_id }}
+                                    @endif
+                                </td>
                                 <td>{{ getAmount($log->matched_bv) }}</td>
                                 <td>{{ showAmount($log->income) }}</td>
                                 <td>{{ $log->transaction?->trx ?? 'N/A' }}</td>

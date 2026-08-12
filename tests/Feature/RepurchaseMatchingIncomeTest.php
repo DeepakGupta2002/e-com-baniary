@@ -18,6 +18,8 @@ use App\Models\RepurchaseMatchingLog;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserExtra;
+use App\Services\RepurchaseMatchingService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -86,7 +88,7 @@ class RepurchaseMatchingIncomeTest extends TestCase
         $this->assertEquals(0.0, (float) $root->fresh()->repurchase_left_bv);
     }
 
-    public function test_shipped_order_generates_repurchase_bv_and_exact_12_percent_income(): void
+    public function test_shipped_order_generates_repurchase_bv_without_immediate_income(): void
     {
         [$root, $left, $right] = $this->networkWithBothBuyers();
         $product = $this->product(['price' => 1000, 'bv' => 1000, 'quantity' => 10]);
@@ -100,14 +102,14 @@ class RepurchaseMatchingIncomeTest extends TestCase
         $this->assertEquals(1000.0, (float) $root->repurchase_right_bv);
         $this->assertEquals(0.0, (float) $root->repurchase_left_carry);
         $this->assertEquals(0.0, (float) $root->repurchase_right_carry);
-        $this->assertEquals(120.0, (float) $root->total_repurchase_matching_income);
-        $this->assertEquals(120.0, (float) $root->balance);
-        $this->assertDatabaseHas('transactions', ['user_id' => $root->id, 'remark' => 'repurchase_matching_income', 'trx_type' => '+']);
+        $this->assertEquals(0.0, (float) $root->total_repurchase_matching_income);
+        $this->assertEquals(0.0, (float) $root->balance);
+        $this->assertDatabaseMissing('transactions', ['user_id' => $root->id, 'remark' => 'repurchase_matching_income', 'trx_type' => '+']);
         $this->assertEquals(2, RepurchaseBvLog::where('user_id', $root->id)->count());
-        $this->assertEquals(1, RepurchaseMatchingLog::where('user_id', $root->id)->count());
+        $this->assertEquals(0, RepurchaseMatchingLog::where('user_id', $root->id)->count());
     }
 
-    public function test_carry_forward_works_correctly(): void
+    public function test_month_end_settlement_pays_exact_12_percent_without_carry_forward(): void
     {
         [$root, $left, $right] = $this->networkWithBothBuyers();
         $product = $this->product(['price' => 1000, 'bv' => 1000, 'quantity' => 20]);
@@ -115,13 +117,18 @@ class RepurchaseMatchingIncomeTest extends TestCase
         $this->shipOrder($this->purchaseOrder($left, $product, 3));
         $this->shipOrder($this->purchaseOrder($right, $product, 5));
 
+        app(RepurchaseMatchingService::class)->settleMonth(2026, 8, Carbon::create(2026, 8, 31, 23, 59, 59));
+
         $root->refresh();
         $log = RepurchaseMatchingLog::where('user_id', $root->id)->firstOrFail();
 
+        $this->assertEquals(3000.0, (float) $log->left_bv);
+        $this->assertEquals(5000.0, (float) $log->right_bv);
         $this->assertEquals(3000.0, (float) $log->matched_bv);
         $this->assertEquals(360.0, (float) $log->income);
         $this->assertEquals(0.0, (float) $root->repurchase_left_carry);
-        $this->assertEquals(2000.0, (float) $root->repurchase_right_carry);
+        $this->assertEquals(0.0, (float) $root->repurchase_right_carry);
+        $this->assertEquals(360.0, (float) $root->balance);
     }
 
     public function test_dashboard_history_admin_report_and_profile_are_correct(): void
@@ -131,6 +138,7 @@ class RepurchaseMatchingIncomeTest extends TestCase
 
         $this->shipOrder($this->purchaseOrder($left, $product));
         $this->shipOrder($this->purchaseOrder($right, $product));
+        app(RepurchaseMatchingService::class)->settleMonth(2026, 8, Carbon::create(2026, 8, 31, 23, 59, 59));
 
         $this->actingAs($root->fresh())
             ->get(route('user.home'))
@@ -167,12 +175,14 @@ class RepurchaseMatchingIncomeTest extends TestCase
         $this->shipOrder($this->purchaseOrder($left, $product));
         $rightOrder = $this->purchaseOrder($right, $product);
         $this->shipOrder($rightOrder);
+        app(RepurchaseMatchingService::class)->settleMonth(2026, 8, Carbon::create(2026, 8, 31, 23, 59, 59));
 
         $rightOrder->refresh();
         $rightOrder->status = Status::ORDER_PENDING;
         $rightOrder->save();
 
         $this->shipOrder($rightOrder);
+        app(RepurchaseMatchingService::class)->settleMonth(2026, 8, Carbon::create(2026, 8, 31, 23, 59, 59));
 
         $root->refresh();
         $this->assertEquals(120.0, (float) $root->total_repurchase_matching_income);
@@ -187,12 +197,34 @@ class RepurchaseMatchingIncomeTest extends TestCase
 
         $this->shipOrder($this->purchaseOrder($left, $product));
         $this->shipOrder($this->purchaseOrder($right, $product));
+        app(RepurchaseMatchingService::class)->settleMonth(2026, 8, Carbon::create(2026, 8, 31, 23, 59, 59));
 
         $this->assertEquals(0, Transaction::whereIn('remark', ['referral_commission', 'level_income', 'fast_start_bonus', 'leader_growth_bonus'])->where('user_id', $root->id)->count());
         $this->assertEquals(0, LevelIncomeLog::where('receiver_user_id', $root->id)->count());
         $this->assertEquals(0, FastStartBonusLog::where('user_id', $root->id)->count());
         $this->assertEquals(0, LeaderGrowthBonusLog::where('user_id', $root->id)->where('status', 'paid')->count());
         $this->assertEquals(1, Transaction::where('user_id', $root->id)->where('remark', 'repurchase_matching_income')->count());
+    }
+
+    public function test_due_month_settlement_runs_on_february_last_day_only(): void
+    {
+        [$root, $left, $right] = $this->networkWithBothBuyers();
+        $product = $this->product(['price' => 1000, 'bv' => 1000, 'quantity' => 10]);
+
+        Carbon::setTestNow(Carbon::create(2026, 2, 20, 10));
+        $this->shipOrder($this->purchaseOrder($left, $product));
+        $this->shipOrder($this->purchaseOrder($right, $product));
+
+        $this->assertEquals(0, app(RepurchaseMatchingService::class)->settleDueMonth(Carbon::create(2026, 2, 27, 23, 59, 59)));
+        $this->assertEquals(0, RepurchaseMatchingLog::where('user_id', $root->id)->count());
+
+        $this->assertEquals(1, app(RepurchaseMatchingService::class)->settleDueMonth(Carbon::create(2026, 2, 28, 23, 59, 59)));
+        $this->assertEquals(120.0, (float) $root->fresh()->total_repurchase_matching_income);
+
+        $this->assertEquals(0, app(RepurchaseMatchingService::class)->settleDueMonth(Carbon::create(2026, 2, 28, 23, 59, 59)));
+        $this->assertEquals(1, Transaction::where('user_id', $root->id)->where('remark', 'repurchase_matching_income')->count());
+
+        Carbon::setTestNow();
     }
 
     private function shipOrder(Order $order): void

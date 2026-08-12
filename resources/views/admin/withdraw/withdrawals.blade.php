@@ -9,6 +9,13 @@
     @endif
     <div class="col-lg-12">
         <div class="card">
+            @if(request()->routeIs('admin.withdraw.data.pending'))
+                <div class="card-header">
+                    <div class="alert alert-info mb-0">
+                        <i class="las la-calendar-check"></i> @lang('Withdrawals can only be approved on Friday.')
+                    </div>
+                </div>
+            @endif
             <div class="card-body p-0">
 
                 <div class="table-responsive--sm table-responsive">

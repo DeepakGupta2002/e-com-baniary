@@ -171,12 +171,12 @@
                             <span>{{ getAmount($user->repurchase_right_bv) }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
-                            <span>@lang('Carry Left')</span>
-                            <span>{{ getAmount($user->repurchase_left_carry) }}</span>
+                            <span>@lang('Settlement')</span>
+                            <span>@lang('Month End')</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
-                            <span>@lang('Carry Right')</span>
-                            <span>{{ getAmount($user->repurchase_right_carry) }}</span>
+                            <span>@lang('Carry Forward')</span>
+                            <span>@lang('No')</span>
                         </li>
                     </ul>
                 </div>

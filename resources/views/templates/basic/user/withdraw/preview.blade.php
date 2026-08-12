@@ -10,6 +10,9 @@
                     <p class="mb-0"><i class="las la-info-circle"></i> @lang('You are requesting') <b>{{ showAmount($withdraw->amount)  }}</b> @lang('for withdraw.') @lang('The admin will send you')
                         <b class="text--success">{{showAmount($withdraw->final_amount,currencyFormat:false) .' '.$withdraw->currency }} </b> @lang('to your account.')</p>
                 </div>
+                <div class="alert alert-info">
+                    <p class="mb-0"><i class="las la-calendar-check"></i> @lang('Withdrawals can only be approved on Friday.')</p>
+                </div>
                 <form action="{{route('user.withdraw.submit')}}" class="disableSubmission" method="post" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-2">

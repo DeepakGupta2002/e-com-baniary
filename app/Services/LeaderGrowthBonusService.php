@@ -32,6 +32,12 @@ class LeaderGrowthBonusService
                 }
 
                 $now = now();
+                $pendingCycle = $this->pendingCycle($user->id);
+                if ($pendingCycle) {
+                    $this->saveProcessedLog($user, $matchingTransaction, (int) $pendingCycle->cycle_number, $pendingCycle->cycle_start, (float) $pendingCycle->achieved_business, 'pending_cycle');
+                    return;
+                }
+
                 $cycleStart = $user->leader_growth_cycle_start_at ?: $now;
                 $baseBusiness = $this->isCycleExpired($cycleStart, $now) ? 0 : (float) $user->leader_growth_current_business;
                 if ($baseBusiness <= 0 && $this->isCycleExpired($cycleStart, $now)) {
@@ -42,7 +48,7 @@ class LeaderGrowthBonusService
                 $cycleNumber = ((int) $user->leader_growth_bonus_count) + 1;
 
                 if ($currentBusiness >= self::TARGET_BUSINESS) {
-                    $this->creditBonus($user, $matchingTransaction, $cycleNumber, $cycleStart, $now, $currentBusiness);
+                    $this->markBonusPending($user, $matchingTransaction, $cycleNumber, $cycleStart, $currentBusiness);
                     return;
                 }
 
@@ -50,18 +56,7 @@ class LeaderGrowthBonusService
                 $user->leader_growth_current_business = $currentBusiness;
                 $user->save();
 
-                LeaderGrowthBonusLog::create([
-                    'user_id' => $user->id,
-                    'cycle_number' => $cycleNumber,
-                    'cycle_start' => $cycleStart,
-                    'cycle_end' => null,
-                    'required_business' => self::TARGET_BUSINESS,
-                    'achieved_business' => $currentBusiness,
-                    'bonus_amount' => 0,
-                    'matching_transaction_id' => $matchingTransaction->id,
-                    'wallet_transaction_id' => null,
-                    'status' => 'processed',
-                ]);
+                $this->saveProcessedLog($user, $matchingTransaction, $cycleNumber, $cycleStart, $currentBusiness);
             });
         } catch (QueryException $exception) {
             if (!$this->isDuplicateMatchingException($exception)) {
@@ -70,32 +65,71 @@ class LeaderGrowthBonusService
         }
     }
 
-    private function creditBonus(
+    public function releaseDueBonuses(): int
+    {
+        return DB::transaction(function () {
+            $logs = LeaderGrowthBonusLog::where('status', 'pending')
+                ->whereNotNull('cycle_end')
+                ->where('cycle_end', '<=', now())
+                ->whereNull('wallet_transaction_id')
+                ->lockForUpdate()
+                ->get();
+
+            $released = 0;
+
+            foreach ($logs as $log) {
+                $user = User::lockForUpdate()->find($log->user_id);
+                if (!$user || LeaderGrowthBonusLog::where('id', $log->id)->where('status', 'paid')->exists()) {
+                    continue;
+                }
+
+                $user->balance += self::BONUS_AMOUNT;
+                $user->leader_growth_total_bonus += self::BONUS_AMOUNT;
+                $user->leader_growth_bonus_count = max((int) $user->leader_growth_bonus_count + 1, (int) $log->cycle_number);
+                $user->leader_growth_last_bonus_at = now();
+                $user->leader_growth_current_business = 0;
+                $user->leader_growth_cycle_start_at = now();
+                $user->save();
+
+                $transaction = new Transaction();
+                $transaction->user_id = $user->id;
+                $transaction->amount = self::BONUS_AMOUNT;
+                $transaction->charge = 0;
+                $transaction->trx_type = '+';
+                $transaction->remark = 'leader_growth_bonus';
+                $transaction->trx = getTrx();
+                $transaction->post_balance = $user->balance;
+                $transaction->details = 'Leader Growth Bonus released after 30-day cycle completion';
+                $transaction->save();
+
+                $log->wallet_transaction_id = $transaction->id;
+                $log->status = 'paid';
+                $log->save();
+
+                notify($user, 'DEFAULT', [
+                    'subject' => 'Leader Growth Bonus Credited',
+                    'message' => 'Leader Growth Bonus of ' . showAmount(self::BONUS_AMOUNT, currencyFormat: false) . ' credited after 30-day cycle completion.',
+                ]);
+
+                $released++;
+            }
+
+            return $released;
+        });
+    }
+
+    private function markBonusPending(
         User $user,
         Transaction $matchingTransaction,
         int $cycleNumber,
         $cycleStart,
-        $cycleEnd,
         float $achievedBusiness
     ): void {
-        $user->balance += self::BONUS_AMOUNT;
-        $user->leader_growth_total_bonus += self::BONUS_AMOUNT;
-        $user->leader_growth_bonus_count = $cycleNumber;
-        $user->leader_growth_last_bonus_at = $cycleEnd;
-        $user->leader_growth_current_business = 0;
-        $user->leader_growth_cycle_start_at = $cycleEnd;
-        $user->save();
+        $cycleEnd = $cycleStart->copy()->addDays(self::WINDOW_DAYS);
 
-        $transaction = new Transaction();
-        $transaction->user_id = $user->id;
-        $transaction->amount = self::BONUS_AMOUNT;
-        $transaction->charge = 0;
-        $transaction->trx_type = '+';
-        $transaction->remark = 'leader_growth_bonus';
-        $transaction->trx = getTrx();
-        $transaction->post_balance = $user->balance;
-        $transaction->details = 'Leader Growth Bonus Fresh Matching Business Target Achieved 300000';
-        $transaction->save();
+        $user->leader_growth_current_business = 0;
+        $user->leader_growth_cycle_start_at = $cycleStart;
+        $user->save();
 
         LeaderGrowthBonusLog::create([
             'user_id' => $user->id,
@@ -106,13 +140,24 @@ class LeaderGrowthBonusService
             'achieved_business' => $achievedBusiness,
             'bonus_amount' => self::BONUS_AMOUNT,
             'matching_transaction_id' => $matchingTransaction->id,
-            'wallet_transaction_id' => $transaction->id,
-            'status' => 'paid',
+            'wallet_transaction_id' => null,
+            'status' => 'pending',
         ]);
+    }
 
-        notify($user, 'DEFAULT', [
-            'subject' => 'Leader Growth Bonus Credited',
-            'message' => 'Leader Growth Bonus of ' . showAmount(self::BONUS_AMOUNT, currencyFormat: false) . ' credited after fresh matching business target achieved.',
+    private function saveProcessedLog(User $user, Transaction $matchingTransaction, int $cycleNumber, $cycleStart, float $currentBusiness, string $status = 'processed'): void
+    {
+        LeaderGrowthBonusLog::create([
+            'user_id' => $user->id,
+            'cycle_number' => $cycleNumber,
+            'cycle_start' => $cycleStart,
+            'cycle_end' => null,
+            'required_business' => self::TARGET_BUSINESS,
+            'achieved_business' => $currentBusiness,
+            'bonus_amount' => 0,
+            'matching_transaction_id' => $matchingTransaction->id,
+            'wallet_transaction_id' => null,
+            'status' => $status,
         ]);
     }
 
@@ -121,6 +166,17 @@ class LeaderGrowthBonusService
         return LeaderGrowthBonusLog::where('matching_transaction_id', $matchingTransactionId)
             ->lockForUpdate()
             ->exists();
+    }
+
+    private function pendingCycle(int $userId): ?LeaderGrowthBonusLog
+    {
+        return LeaderGrowthBonusLog::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->whereNotNull('cycle_end')
+            ->where('cycle_end', '>', now())
+            ->lockForUpdate()
+            ->latest('id')
+            ->first();
     }
 
     private function isCycleExpired($cycleStart, $now): bool

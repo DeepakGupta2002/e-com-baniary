@@ -12,6 +12,10 @@ class RepurchaseMatchingLog extends Model
     protected $fillable = [
         'user_id',
         'order_id',
+        'period_year',
+        'period_month',
+        'period_start',
+        'period_end',
         'left_bv',
         'right_bv',
         'matched_bv',
@@ -21,10 +25,14 @@ class RepurchaseMatchingLog extends Model
         'carry_right',
         'transaction_id',
         'status',
+        'settled_at',
         'created_at',
     ];
 
     protected $casts = [
+        'period_start' => 'datetime',
+        'period_end' => 'datetime',
+        'settled_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 

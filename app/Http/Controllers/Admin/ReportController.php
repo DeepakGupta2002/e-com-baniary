@@ -173,7 +173,7 @@ class ReportController extends Controller
     {
         $pageTitle = 'Leader Growth Bonus Report';
         $logs = LeaderGrowthBonusLog::with(['user', 'matchingTransaction', 'walletTransaction'])
-            ->where('status', 'paid')
+            ->whereIn('status', ['pending', 'paid'])
             ->searchable(['user:username,firstname,lastname'])
             ->dateFilter()
             ->orderByDesc('id');

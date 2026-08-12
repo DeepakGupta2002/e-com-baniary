@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserExtra;
 use App\Services\LeaderGrowthBonusService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -33,21 +34,22 @@ class LeaderGrowthBonusTest extends TestCase
         $this->seedTestingRuntimeDefaults();
     }
 
-    public function test_reward_after_three_lakh_fresh_matching_business(): void
+    public function test_reward_becomes_pending_after_three_lakh_fresh_matching_business(): void
     {
         $user = $this->createReadyUser();
 
         $this->sendMatching($user, 100000);
         $this->sendMatching($user, 200000);
 
-        $this->assertLeaderGrowthPaid($user, 30000.0, 1);
+        $this->assertLeaderGrowthPending($user, 30000.0, 1);
     }
 
-    public function test_wallet_transaction_and_log_are_created(): void
+    public function test_wallet_transaction_and_log_are_created_on_cycle_end(): void
     {
         $user = $this->createReadyUser();
 
         $this->sendMatching($user, 300000);
+        $this->releasePendingBonus($user);
         $user->refresh();
 
         $transaction = Transaction::where('user_id', $user->id)->where('remark', 'leader_growth_bonus')->firstOrFail();
@@ -56,7 +58,7 @@ class LeaderGrowthBonusTest extends TestCase
         $this->assertEquals(30000.0, (float) $user->balance);
         $this->assertEquals(30000.0, (float) $transaction->amount);
         $this->assertSame('+', $transaction->trx_type);
-        $this->assertSame('Leader Growth Bonus Fresh Matching Business Target Achieved 300000', $transaction->details);
+        $this->assertSame('Leader Growth Bonus released after 30-day cycle completion', $transaction->details);
         $this->assertEquals(300000.0, (float) $log->required_business);
         $this->assertEquals(300000.0, (float) $log->achieved_business);
         $this->assertSame($transaction->id, $log->wallet_transaction_id);
@@ -67,6 +69,7 @@ class LeaderGrowthBonusTest extends TestCase
         $user = $this->createReadyUser();
 
         $this->sendMatching($user, 300000);
+        $this->releasePendingBonus($user);
         $user->refresh();
 
         $this->assertEquals(0.0, (float) $user->leader_growth_current_business);
@@ -84,6 +87,7 @@ class LeaderGrowthBonusTest extends TestCase
 
         for ($i = 0; $i < 3; $i++) {
             $this->sendMatching($user, 300000);
+            $this->releasePendingBonus($user);
         }
 
         $user->refresh();
@@ -102,7 +106,7 @@ class LeaderGrowthBonusTest extends TestCase
         app(LeaderGrowthBonusService::class)->handleMatchingPaid($user, $matching, 300000);
         app(LeaderGrowthBonusService::class)->handleMatchingPaid($user, $matching, 300000);
 
-        $this->assertLeaderGrowthPaid($user, 30000.0, 1);
+        $this->assertLeaderGrowthPending($user, 30000.0, 1);
         $this->assertEquals(1, LeaderGrowthBonusLog::where('matching_transaction_id', $matching->id)->count());
     }
 
@@ -176,7 +180,7 @@ class LeaderGrowthBonusTest extends TestCase
             ->assertSee('Leader Growth Bonus History')
             ->assertSee('30,000')
             ->assertSee('300,000')
-            ->assertSee('Paid');
+            ->assertSee('Pending Payout');
     }
 
     public function test_admin_report_is_correct(): void
@@ -189,13 +193,15 @@ class LeaderGrowthBonusTest extends TestCase
             ->assertOk()
             ->assertSee($user->username)
             ->assertSee('30,000')
-            ->assertSee('300,000');
+            ->assertSee('300,000')
+            ->assertSee('Pending Payout');
     }
 
     public function test_admin_profile_card_is_correct(): void
     {
         $user = $this->createReadyUser();
         $this->sendMatching($user, 300000);
+        $this->releasePendingBonus($user);
 
         $this->actingAs($this->admin(), 'admin')
             ->get(route('admin.users.detail', $user->id))
@@ -204,6 +210,36 @@ class LeaderGrowthBonusTest extends TestCase
             ->assertSee('Total Bonus')
             ->assertSee('Bonus Count')
             ->assertSee('30,000');
+    }
+
+    public function test_pending_bonus_is_not_released_before_cycle_end(): void
+    {
+        $user = $this->createReadyUser();
+        $this->sendMatching($user, 300000);
+        $pending = LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'pending')->firstOrFail();
+
+        Carbon::setTestNow($pending->cycle_end->copy()->subSecond());
+        $this->assertEquals(0, app(LeaderGrowthBonusService::class)->releaseDueBonuses());
+        Carbon::setTestNow();
+
+        $user->refresh();
+        $this->assertEquals(0.0, (float) $user->leader_growth_total_bonus);
+        $this->assertEquals(0, Transaction::where('user_id', $user->id)->where('remark', 'leader_growth_bonus')->count());
+    }
+
+    public function test_pending_bonus_is_released_only_once_after_cycle_end(): void
+    {
+        $user = $this->createReadyUser();
+        $this->sendMatching($user, 300000);
+        $pending = LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'pending')->firstOrFail();
+
+        Carbon::setTestNow($pending->cycle_end->copy()->addSecond());
+        $this->assertEquals(1, app(LeaderGrowthBonusService::class)->releaseDueBonuses());
+        $this->assertEquals(0, app(LeaderGrowthBonusService::class)->releaseDueBonuses());
+        Carbon::setTestNow();
+
+        $this->assertLeaderGrowthPaid($user, 30000.0, 1);
+        $this->assertEquals(1, Transaction::where('user_id', $user->id)->where('remark', 'leader_growth_bonus')->count());
     }
 
     private function sendMatching(User $user, float $freshBusiness): Transaction
@@ -242,6 +278,28 @@ class LeaderGrowthBonusTest extends TestCase
         $this->assertNotNull($user->leader_growth_last_bonus_at);
         $this->assertEquals($count, Transaction::where('user_id', $user->id)->where('remark', 'leader_growth_bonus')->count());
         $this->assertEquals($count, LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'paid')->count());
+    }
+
+    private function assertLeaderGrowthPending(User $user, float $amount, int $count): void
+    {
+        $user->refresh();
+
+        $this->assertEquals(0.0, (float) $user->leader_growth_total_bonus);
+        $this->assertEquals(0, (int) $user->leader_growth_bonus_count);
+        $this->assertEquals(0.0, (float) $user->leader_growth_current_business);
+        $this->assertNull($user->leader_growth_last_bonus_at);
+        $this->assertEquals(0, Transaction::where('user_id', $user->id)->where('remark', 'leader_growth_bonus')->count());
+        $this->assertEquals($count, LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'pending')->count());
+        $this->assertEquals($amount, (float) LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'pending')->sum('bonus_amount'));
+    }
+
+    private function releasePendingBonus(User $user): void
+    {
+        $pending = LeaderGrowthBonusLog::where('user_id', $user->id)->where('status', 'pending')->latest('id')->firstOrFail();
+
+        Carbon::setTestNow($pending->cycle_end->copy()->addSecond());
+        app(LeaderGrowthBonusService::class)->releaseDueBonuses();
+        Carbon::setTestNow();
     }
 
     private function admin(): Admin
