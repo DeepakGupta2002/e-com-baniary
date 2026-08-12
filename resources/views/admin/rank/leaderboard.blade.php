@@ -10,7 +10,7 @@
                             <th>@lang('Position')</th>
                             <th>@lang('Username')</th>
                             <th>@lang('Current Rank')</th>
-                            <th>@lang('Total Team DP')</th>
+                            <th>@lang('Total Team BV')</th>
                             <th>@lang('Total Rank Reward')</th>
                         </tr>
                     </thead>

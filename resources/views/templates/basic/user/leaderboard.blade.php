@@ -5,7 +5,7 @@
         <div class="leaderboard-head">
             <div>
                 <h4 class="leaderboard-title">@lang('Leaderboard')</h4>
-                <p class="leaderboard-subtitle">@lang('Track top performers by team DP and rank progress.')</p>
+                <p class="leaderboard-subtitle">@lang('Track top performers by team BV and rank progress.')</p>
             </div>
             <div class="leaderboard-self">
                 <span>@lang('Your Position')</span>
@@ -31,7 +31,7 @@
                             <h6>{{ $topLeader->username }}</h6>
                             <span>{{ getCurrentRankName($topLeader) }}</span>
                         </div>
-                        <div class="podium-dp">{{ getAmount($topLeader->total_team_dp) }} @lang('DP')</div>
+                        <div class="podium-dp">{{ getAmount($topLeader->total_team_dp) }} @lang('BV')</div>
                     </div>
                 @endforeach
             </div>
@@ -59,7 +59,7 @@
                                 <th>@lang('Position')</th>
                                 <th>@lang('Member')</th>
                                 <th>@lang('Current Rank')</th>
-                                <th>@lang('Total Team DP')</th>
+                                <th>@lang('Total Team BV')</th>
                                 <th>@lang('Progress')</th>
                             </tr>
                         </thead>
@@ -101,7 +101,7 @@
                                         </div>
                                         <small>
                                             @if ($nextRank)
-                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - (float) $leader->total_team_dp)) }} @lang('DP to') {{ __($nextRank->name) }}
+                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - (float) $leader->total_team_dp)) }} @lang('BV to') {{ __($nextRank->name) }}
                                             @else
                                                 @lang('Top rank achieved')
                                             @endif

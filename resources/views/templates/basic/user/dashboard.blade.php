@@ -271,7 +271,7 @@
                                 <h6 class="title">@lang('Repurchase Matching Income')</h6>
                                 <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_repurchase_matching_income) }}</h3>
                                 <small>@lang('Left BV'): {{ getAmount(auth()->user()->repurchase_left_bv) }} | @lang('Right BV'): {{ getAmount(auth()->user()->repurchase_right_bv) }}</small><br>
-                                <small>@lang('Settlement'): @lang('Month End') | @lang('Carry Forward'): @lang('No')</small>
+                                <small>@lang('Settlement'): @lang('Month End')</small>
                             </div>
                             <div class="icon"><i class="las la-sync"></i></div>
                         </div>
@@ -294,7 +294,7 @@
                     <div class="dashboard-item">
                         <div class="dashboard-item-header">
                             <div class="header-left">
-                                <h6 class="title">@lang('Total Team DP')</h6>
+                                <h6 class="title">@lang('Total Team BV')</h6>
                                 <h3 class="ammount theme-one">{{ getAmount(auth()->user()->total_team_dp) }}</h3>
                             </div>
                             <div class="icon"><i class="las la-sitemap"></i></div>
@@ -321,7 +321,7 @@
                     <div class="card custom--card">
                         <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
                             <h5 class="mb-0">@lang('Rank Reward Roadmap')</h5>
-                            <span class="badge badge--info">@lang('Your Team DP'): {{ getAmount(auth()->user()->total_team_dp) }}</span>
+                            <span class="badge badge--info">@lang('Your Team BV'): {{ getAmount(auth()->user()->total_team_dp) }}</span>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -329,7 +329,7 @@
                                     <thead>
                                         <tr>
                                             <th>@lang('Rank')</th>
-                                            <th>@lang('Required DP')</th>
+                                            <th>@lang('Required BV')</th>
                                             <th>@lang('Reward')</th>
                                             <th>@lang('Status')</th>
                                         </tr>

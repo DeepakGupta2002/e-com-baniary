@@ -10,7 +10,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('Name')</th>
-                                    <th>@lang('Required Team DP')</th>
+                                    <th>@lang('Required Team BV')</th>
                                     <th>@lang('Reward Amount')</th>
                                     <th>@lang('Sort Order')</th>
                                     <th>@lang('Status')</th>
@@ -73,7 +73,7 @@
                                 <input class="form-control" name="name" type="text" required>
                             </div>
                             <div class="form-group col-sm-4">
-                                <label class="font-weight-bold">@lang('Required Team DP')</label>
+                                <label class="font-weight-bold">@lang('Required Team BV')</label>
                                 <input class="form-control" name="required_team_dp" type="number" step="any" min="0" required>
                             </div>
                             <div class="form-group col-sm-4">

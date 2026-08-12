@@ -584,7 +584,7 @@ class OrivaCompensationEngineTest extends TestCase
             'pos_id' => $sponsor->id,
         ]);
 
-        updateBV($extraChild->id, 1000, 'Additional team DP');
+        updateBV($extraChild->id, 1000, 'Additional team BV');
 
         $sponsor->refresh();
 

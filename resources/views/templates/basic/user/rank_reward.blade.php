@@ -6,7 +6,7 @@
             <h5 class="mb-0">@lang('Rank Reward History')</h5>
             <div class="d-flex flex-wrap gap-3">
                 <span class="badge badge--primary">@lang('Current Rank'): {{ getCurrentRankName(auth()->user()) }}</span>
-                <span class="badge badge--info">@lang('Total Team DP'): {{ getAmount(auth()->user()->total_team_dp) }}</span>
+                <span class="badge badge--info">@lang('Total Team BV'): {{ getAmount(auth()->user()->total_team_dp) }}</span>
                 <span class="badge badge--success">@lang('Total Rank Reward'): {{ showAmount(auth()->user()->total_rank_reward) }}</span>
             </div>
         </div>
@@ -17,7 +17,7 @@
                         <tr>
                             <th>@lang('Date')</th>
                             <th>@lang('Rank')</th>
-                            <th>@lang('Team DP')</th>
+                            <th>@lang('Team BV')</th>
                             <th>@lang('Reward')</th>
                             <th>@lang('Status')</th>
                         </tr>
