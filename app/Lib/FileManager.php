@@ -127,6 +127,7 @@ class FileManager
 	protected function uploadImage(){
         $manager = new ImageManager(new Driver());
         $image = $manager->read($this->file);
+        $path = $this->filesystemPath($this->path);
 
         //resize the
 	    if ($this->size) {
@@ -134,7 +135,7 @@ class FileManager
 	        $image->resize($size[0], $size[1]);
 	    }
         //save the image
-	    $image->save($this->path . '/' . $this->filename);
+	    $image->save($path . '/' . $this->filename);
 
         //save the image as thumbnail version
 	    if ($this->thumb) {
@@ -142,7 +143,7 @@ class FileManager
                 $this->removeFile($this->path . '/thumb_' . $this->old);
             }
 	        $thumb = explode('x', $this->thumb);
-	        $manager->read($this->file)->resize($thumb[0], $thumb[1])->save($this->path . '/thumb_' . $this->filename);
+	        $manager->read($this->file)->resize($thumb[0], $thumb[1])->save($path . '/thumb_' . $this->filename);
 	    }
 	}
 
@@ -153,7 +154,7 @@ class FileManager
     * @return void
     */
 	protected function uploadFile(){
-	    $this->file->move($this->path,$this->filename);
+	    $this->file->move($this->filesystemPath($this->path),$this->filename);
 	}
 
     /**
@@ -165,6 +166,7 @@ class FileManager
     */
 	public function makeDirectory($location = null){
 		if (!$location) $location = $this->path;
+        $location = $this->filesystemPath($location);
 		if (file_exists($location)) return true;
     	return mkdir($location, 0755, true);
 	}
@@ -205,14 +207,25 @@ class FileManager
 	public function removeFile($path = null)
 	{
 		if (!$path) $path = $this->path . '/' . $this->old;
+        $path = $this->filesystemPath($path);
 
 	    file_exists($path) && is_file($path) ? @unlink($path) : false;
 
 	    if ($this->thumb) {
 	    	if (!$path) $path = $this->path . '/thumb_' . $this->old;
+            $path = $this->filesystemPath($path);
 	    	file_exists($path) && is_file($path) ? @unlink($path) : false;
 	    }
 	}
+
+    protected function filesystemPath($path)
+    {
+        if (!$path || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) || str_starts_with($path, DIRECTORY_SEPARATOR)) {
+            return $path;
+        }
+
+        return public_path($path);
+    }
 
     /**
     * Generating the filename which is uploading
