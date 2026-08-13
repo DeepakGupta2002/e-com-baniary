@@ -15,6 +15,7 @@ use App\Lib\FormProcessor;
 use App\Models\Withdrawal;
 use App\Models\DeviceToken;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Lib\GoogleAuthenticator;
@@ -39,8 +40,46 @@ class UserController extends Controller
             ->whereNotNull('cycle_end')
             ->latest('id')
             ->first();
+        $user = auth()->user();
+        $fastStartWindow = $this->fastStartWindow($user);
 
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus'));
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow'));
+    }
+
+    private function fastStartWindow(User $user): array
+    {
+        if ($user->fast_start_bonus_claimed) {
+            return ['status' => 'claimed'];
+        }
+
+        if (!$user->plan_id) {
+            return ['status' => 'inactive'];
+        }
+
+        $activationAt = $user->plan_activated_at ?: Transaction::where('user_id', $user->id)
+            ->where('remark', 'purchased_plan')
+            ->latest('id')
+            ->value('created_at');
+
+        if (!$activationAt) {
+            return ['status' => 'inactive'];
+        }
+
+        $expiresAt = Carbon::parse($activationAt)->addDays(15);
+
+        if (now()->greaterThan($expiresAt)) {
+            return [
+                'status' => 'expired',
+                'expires_at' => $expiresAt,
+            ];
+        }
+
+        return [
+            'status' => 'active',
+            'expires_at' => $expiresAt,
+            'expires_at_iso' => $expiresAt->toIso8601String(),
+            'seconds_left' => (int) now()->diffInSeconds($expiresAt),
+        ];
     }
 
     public function depositHistory(Request $request)

@@ -44,7 +44,7 @@ class FastStartBonusService
                 }
 
                 $activationDate = Carbon::parse($sponsor->plan_activated_at);
-                $windowEnd = $activationDate->copy()->addDays(self::WINDOW_DAYS)->endOfDay();
+                $windowEnd = $activationDate->copy()->addDays(self::WINDOW_DAYS);
 
                 if (now()->greaterThan($windowEnd)) {
                     return;

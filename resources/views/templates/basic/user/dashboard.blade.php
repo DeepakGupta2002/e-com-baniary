@@ -236,6 +236,22 @@
                             <div class="header-left">
                                 <h6 class="title">@lang('Fast Start Bonus')</h6>
                                 <h3 class="ammount theme-one">{{ showAmount(auth()->user()->fast_start_bonus_amount) }}</h3>
+                                @if($fastStartWindow['status'] === 'active')
+                                    <small>@lang('Window Ends'): {{ showDateTime($fastStartWindow['expires_at']) }}</small><br>
+                                    <small>
+                                        @lang('Time Left'):
+                                        <span class="fast-start-countdown text--success" data-seconds-left="{{ $fastStartWindow['seconds_left'] }}">
+                                            @lang('Calculating...')
+                                        </span>
+                                    </small>
+                                @elseif($fastStartWindow['status'] === 'claimed')
+                                    <small class="text--success">@lang('Fast Start Bonus earned')</small>
+                                @elseif($fastStartWindow['status'] === 'expired')
+                                    <small class="text--danger">@lang('Fast Start Bonus window expired')</small><br>
+                                    <small>@lang('Expired On'): {{ showDateTime($fastStartWindow['expires_at']) }}</small>
+                                @else
+                                    <small class="text--warning">@lang('Activate a plan to start eligibility')</small>
+                                @endif
                             </div>
                             <div class="icon"><i class="las la-bolt"></i></div>
                         </div>
@@ -373,20 +389,64 @@
                     </div>
                 </div>
             </div>
-        @endsection
+        </div>
+    </div>
+@endsection
 
-        @if (auth()->user()->kv == Status::KYC_UNVERIFIED && auth()->user()->kyc_rejection_reason)
-            <div class="modal fade" id="kycRejectionReason">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">@lang('KYC Document Rejection Reason')</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>{{ auth()->user()->kyc_rejection_reason }}</p>
-                        </div>
-                    </div>
+@if (auth()->user()->kv == Status::KYC_UNVERIFIED && auth()->user()->kyc_rejection_reason)
+    <div class="modal fade" id="kycRejectionReason">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('KYC Document Rejection Reason')</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ auth()->user()->kyc_rejection_reason }}</p>
                 </div>
             </div>
-        @endif
+        </div>
+    </div>
+@endif
+
+@push('script')
+    <script>
+        (function() {
+            "use strict";
+
+            const countdowns = document.querySelectorAll('.fast-start-countdown');
+            if (!countdowns.length) {
+                return;
+            }
+
+            const formatTimeLeft = (seconds) => {
+                const days = Math.floor(seconds / 86400);
+                const hours = Math.floor((seconds % 86400) / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const remainingSeconds = seconds % 60;
+
+                return `${days}d ${hours}h ${minutes}m ${remainingSeconds}s`;
+            };
+
+            const updateCountdowns = () => {
+                countdowns.forEach((countdown) => {
+                    if (!countdown.dataset.startedAt) {
+                        countdown.dataset.startedAt = Date.now();
+                    }
+
+                    const startedAt = Number(countdown.dataset.startedAt);
+                    const initialSecondsLeft = parseInt(countdown.dataset.secondsLeft || '0', 10);
+                    const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+                    const secondsLeft = Math.max(0, initialSecondsLeft - elapsedSeconds);
+
+                    countdown.textContent = secondsLeft > 0 ? formatTimeLeft(secondsLeft) : '@lang('Expired')';
+                    countdown.classList.toggle('text--success', secondsLeft > 0);
+                    countdown.classList.toggle('text--danger', secondsLeft <= 0);
+                });
+            };
+
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        })();
+    </script>
+@endpush
