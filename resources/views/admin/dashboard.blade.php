@@ -189,6 +189,10 @@
                 link="{{ route('admin.report.binary.commission') }}" icon="fas la-tree" bg="7" outline="true" />
         </div>
         <div class="col-xxl-3 col-sm-6">
+            <x-widget value="{{ showAmount($widget['total_level_income']) }}" title="Total Level Income" style="6"
+                link="{{ route('admin.report.level.income') }}" icon="las la-layer-group" bg="15" outline="true" />
+        </div>
+        <div class="col-xxl-3 col-sm-6">
             <x-widget value="{{ showAmount($widget['total_fast_start_bonus']) }}" title="Total Fast Start Bonus Paid" style="6"
                 link="{{ route('admin.report.fast.start.bonus') }}" icon="las la-bolt" bg="11" outline="true" />
         </div>

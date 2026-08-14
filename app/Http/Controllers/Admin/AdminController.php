@@ -65,6 +65,7 @@ class AdminController extends Controller
         $widget['last7days_invest'] = Transaction::whereDate('created_at', '>=', Carbon::now()->subDays(6))->where('remark', 'purchased_plan')->sum('amount');
         $widget['total_ref_com'] = Transaction::where('remark', 'referral_commission')->sum('amount');
         $widget['total_binary_com'] = Transaction::where('remark', 'binary_commission')->sum('amount');
+        $widget['total_level_income'] = Transaction::where('remark', 'level_income')->sum('amount');
         $widget['total_fast_start_bonus'] = Transaction::where('remark', 'fast_start_bonus')->sum('amount');
         $widget['total_leader_growth_bonus'] = Transaction::where('remark', 'leader_growth_bonus')->sum('amount');
         $widget['total_repurchase_matching_income'] = Transaction::where('remark', 'repurchase_matching_income')->sum('amount');

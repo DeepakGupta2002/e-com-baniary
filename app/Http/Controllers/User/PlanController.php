@@ -147,7 +147,7 @@ class PlanController extends Controller
     public function myRefLog()
     {
         $pageTitle = "My Referral";
-        $logs      = User::where('ref_by', auth()->id())->latest()->paginate(getPaginate());
+        $logs      = User::with('plan')->where('ref_by', auth()->id())->latest()->paginate(getPaginate());
         return view('Template::user.myRef', compact('pageTitle', 'logs'));
     }
 

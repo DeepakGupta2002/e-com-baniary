@@ -150,7 +150,7 @@ class OrivaCompensationEngineTest extends TestCase
         $originalDaily = (float) $plan->daily_capping;
         $originalMonthly = (float) $plan->monthly_capping;
 
-        $plan->daily_capping = 100;
+        $plan->daily_capping = 600;
         $plan->monthly_capping = 999999;
         $plan->save();
 
@@ -185,7 +185,7 @@ class OrivaCompensationEngineTest extends TestCase
         $originalMonthly = (float) $plan->monthly_capping;
 
         $plan->daily_capping = 999999;
-        $plan->monthly_capping = 200;
+        $plan->monthly_capping = 700;
         $plan->save();
 
         [$sponsor, $leftChild, $rightChild] = $this->createBinaryScenarioUsers(3);
@@ -276,6 +276,97 @@ class OrivaCompensationEngineTest extends TestCase
         $plan->daily_capping = $originalDaily;
         $plan->monthly_capping = $originalMonthly;
         $plan->save();
+    }
+
+    public function test_binary_matching_waits_until_paid_direct_referrals_exist_on_both_legs_and_preserves_old_bv(): void
+    {
+        $plan = Plan::findOrFail(3);
+
+        $sponsor = $this->createReadyUser(['balance' => (float) $plan->price]);
+        $leftGatewayFree = $this->createReadyUser([
+            'ref_by' => $sponsor->id,
+            'pos_id' => $sponsor->id,
+            'position' => Status::LEFT,
+        ]);
+        $rightGatewayFree = $this->createReadyUser([
+            'ref_by' => $sponsor->id,
+            'pos_id' => $sponsor->id,
+            'position' => Status::RIGHT,
+        ]);
+
+        $leftSponsoredPaid = $this->createReadyUser([
+            'ref_by' => $sponsor->id,
+            'pos_id' => $leftGatewayFree->id,
+            'position' => Status::LEFT,
+            'balance' => (float) $plan->price,
+        ]);
+        $rightNonSponsoredPaid = $this->createReadyUser([
+            'pos_id' => $rightGatewayFree->id,
+            'position' => Status::RIGHT,
+            'balance' => (float) $plan->price,
+        ]);
+
+        updateFreeCount($leftGatewayFree->id);
+        updateFreeCount($rightGatewayFree->id);
+        updateFreeCount($leftSponsoredPaid->id);
+        updateFreeCount($rightNonSponsoredPaid->id);
+
+        $this->purchasePlan($sponsor, 3, (float) $plan->price);
+        $this->purchasePlan($leftSponsoredPaid, 3, (float) $plan->price);
+        $this->purchasePlan($rightNonSponsoredPaid, 3, (float) $plan->price);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $sponsor->refresh();
+        $extra = UserExtra::where('user_id', $sponsor->id)->firstOrFail();
+
+        $this->assertEquals(0.0, (float) $sponsor->total_binary_com);
+        $this->assertEquals(2500.0, round((float) $extra->bv_left, 8));
+        $this->assertEquals(2500.0, round((float) $extra->bv_right, 8));
+        $this->assertEquals(0, Transaction::where('user_id', $sponsor->id)->where('remark', 'binary_commission')->count());
+        $this->assertEquals(0, BvLog::where('user_id', $sponsor->id)->where('trx_type', '-')->count());
+        $this->actingAs($sponsor->fresh())
+            ->get(route('user.home'))
+            ->assertOk()
+            ->assertSee('Status')
+            ->assertSee('BLOCKED')
+            ->assertSee('Paid direct referrals missing on both legs')
+            ->assertSee('View Details')
+            ->assertSee('Matching income is currently on hold')
+            ->assertSee('Left BV')
+            ->assertSee('Right BV');
+
+        $rightSponsoredPaid = $this->createReadyUser([
+            'ref_by' => $sponsor->id,
+            'pos_id' => $rightGatewayFree->id,
+            'position' => Status::LEFT,
+            'balance' => (float) $plan->price,
+        ]);
+        updateFreeCount($rightSponsoredPaid->id);
+        $this->purchasePlan($rightSponsoredPaid, 3, (float) $plan->price);
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $sponsor->refresh();
+        $extra->refresh();
+
+        $transaction = Transaction::where('user_id', $sponsor->id)->where('remark', 'binary_commission')->firstOrFail();
+
+        $this->assertEquals(250.0, (float) $transaction->amount);
+        $this->assertEquals(250.0, (float) $sponsor->total_binary_com);
+        $this->assertEquals(0.0, round((float) $extra->bv_left, 8));
+        $this->assertEquals(2500.0, round((float) $extra->bv_right, 8));
+        $this->actingAs($sponsor->fresh())
+            ->get(route('user.home'))
+            ->assertOk()
+            ->assertSee('ACTIVE');
+
+        $this->resetMatchingWindow();
+        $this->from('/')->get(route('cron', ['alias' => 'matching-bonus']))->assertRedirect('/');
+
+        $this->assertEquals(1, Transaction::where('user_id', $sponsor->id)->where('remark', 'binary_commission')->count());
     }
 
     public function test_level_income_is_distributed_to_10_sponsor_levels_from_matching_income(): void
@@ -600,13 +691,13 @@ class OrivaCompensationEngineTest extends TestCase
 
         $sponsor = $this->createReadyUser();
         $leftChild = $this->createReadyUser([
-            'ref_by'   => 0,
+            'ref_by'   => $sponsor->id,
             'pos_id'   => $sponsor->id,
             'position' => Status::LEFT,
             'balance'  => (float) $plan->price,
         ]);
         $rightChild = $this->createReadyUser([
-            'ref_by'   => 0,
+            'ref_by'   => $sponsor->id,
             'pos_id'   => $sponsor->id,
             'position' => Status::RIGHT,
             'balance'  => (float) $plan->price,
@@ -621,13 +712,13 @@ class OrivaCompensationEngineTest extends TestCase
     private function attachBinaryChildren(User $parent, float $planPrice): array
     {
         $leftChild = $this->createReadyUser([
-            'ref_by'   => 0,
+            'ref_by'   => $parent->id,
             'pos_id'   => $parent->id,
             'position' => Status::LEFT,
             'balance'  => $planPrice,
         ]);
         $rightChild = $this->createReadyUser([
-            'ref_by'   => 0,
+            'ref_by'   => $parent->id,
             'pos_id'   => $parent->id,
             'position' => Status::RIGHT,
             'balance'  => $planPrice,
@@ -670,6 +761,7 @@ class OrivaCompensationEngineTest extends TestCase
         $general->secure_password = 0;
         $general->ev = 0;
         $general->sv = 0;
+        $general->maintenance_mode = 0;
         $general->save();
 
         Extension::whereIn('act', ['google-recaptcha2', 'custom-captcha'])->update(['status' => Status::DISABLE]);

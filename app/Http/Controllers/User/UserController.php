@@ -42,8 +42,9 @@ class UserController extends Controller
             ->first();
         $user = auth()->user();
         $fastStartWindow = $this->fastStartWindow($user);
+        $binaryMatchingStatus = $this->binaryMatchingStatus($user);
 
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow'));
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus'));
     }
 
     private function fastStartWindow(User $user): array
@@ -80,6 +81,63 @@ class UserController extends Controller
             'expires_at_iso' => $expiresAt->toIso8601String(),
             'seconds_left' => (int) now()->diffInSeconds($expiresAt),
         ];
+    }
+
+    private function binaryMatchingStatus(User $user): array
+    {
+        [$leftDirectPaid, $rightDirectPaid] = $this->paidSponsoredLegStatus($user);
+        $leftBv = (float) ($user->userExtra?->bv_left ?? 0);
+        $rightBv = (float) ($user->userExtra?->bv_right ?? 0);
+        $hasMatchedBv = min($leftBv, $rightBv) > 0;
+        $isEligible = $leftDirectPaid && $rightDirectPaid;
+
+        return [
+            'left_direct_paid' => $leftDirectPaid,
+            'right_direct_paid' => $rightDirectPaid,
+            'status' => $isEligible ? 'active' : 'blocked',
+            'payout_status' => $isEligible && !$hasMatchedBv ? 'waiting_bv' : ($isEligible ? 'active' : 'blocked'),
+            'left_bv' => $leftBv,
+            'right_bv' => $rightBv,
+            'matched_bv' => min($leftBv, $rightBv),
+        ];
+    }
+
+    private function paidSponsoredLegStatus(User $user): array
+    {
+        $hasLeftPaid = false;
+        $hasRightPaid = false;
+
+        User::where('ref_by', $user->id)
+            ->where('plan_id', '>', 0)
+            ->get(['id', 'pos_id', 'position'])
+            ->each(function (User $sponsoredUser) use ($user, &$hasLeftPaid, &$hasRightPaid) {
+                $leg = $this->resolveLegUnderUser($sponsoredUser, $user->id);
+
+                if ($leg === Status::LEFT) {
+                    $hasLeftPaid = true;
+                }
+
+                if ($leg === Status::RIGHT) {
+                    $hasRightPaid = true;
+                }
+            });
+
+        return [$hasLeftPaid, $hasRightPaid];
+    }
+
+    private function resolveLegUnderUser(User $downlineUser, int $rootUserId): ?int
+    {
+        $current = $downlineUser;
+
+        while ($current && (int) $current->pos_id > 0) {
+            if ((int) $current->pos_id === $rootUserId) {
+                return (int) $current->position;
+            }
+
+            $current = User::find($current->pos_id);
+        }
+
+        return null;
     }
 
     public function depositHistory(Request $request)

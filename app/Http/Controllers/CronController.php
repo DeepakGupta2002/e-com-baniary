@@ -125,6 +125,10 @@ class CronController extends Controller
                     continue;
                 }
 
+                if (!$this->hasPaidSponsoredUsersOnBothLegs($payment)) {
+                    continue;
+                }
+
                 $matchingPercentage = (float) ($currentPlan->tree_com ?? 0);
                 $bonus = getAmount($paidbv * ($matchingPercentage / 100), 8);
                 $creditAmount = getCommissionCreditAmountByCapping($payment, $bonus);
@@ -196,5 +200,43 @@ class CronController extends Controller
 
             return '---';
         });
+    }
+
+    private function hasPaidSponsoredUsersOnBothLegs(User $user): bool
+    {
+        $hasLeftPaid = false;
+        $hasRightPaid = false;
+
+        User::where('ref_by', $user->id)
+            ->where('plan_id', '>', 0)
+            ->get(['id', 'pos_id', 'position'])
+            ->each(function (User $sponsoredUser) use ($user, &$hasLeftPaid, &$hasRightPaid) {
+                $leg = $this->resolveLegUnderUser($sponsoredUser, $user->id);
+
+                if ($leg === Status::LEFT) {
+                    $hasLeftPaid = true;
+                }
+
+                if ($leg === Status::RIGHT) {
+                    $hasRightPaid = true;
+                }
+            });
+
+        return $hasLeftPaid && $hasRightPaid;
+    }
+
+    private function resolveLegUnderUser(User $downlineUser, int $rootUserId): ?int
+    {
+        $current = $downlineUser;
+
+        while ($current && (int) $current->pos_id > 0) {
+            if ((int) $current->pos_id === $rootUserId) {
+                return (int) $current->position;
+            }
+
+            $current = User::find($current->pos_id);
+        }
+
+        return null;
     }
 }

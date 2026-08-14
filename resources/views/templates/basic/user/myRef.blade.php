@@ -48,6 +48,8 @@
                                     <th>@lang('Username')</th>
                                     <th>@lang('Name')</th>
                                     <th>@lang('Email')</th>
+                                    <th>@lang('Plan')</th>
+                                    <th>@lang('Placement')</th>
                                     <th>@lang('Join Date')</th>
                                 </tr>
                             </thead>
@@ -57,6 +59,22 @@
                                         <td>{{ $data->username }}</td>
                                         <td>{{ $data->fullname }}</td>
                                         <td>{{ $data->email }}</td>
+                                        <td>
+                                            @if ($data->plan)
+                                                <span class="badge badge--success">{{ __($data->plan->name) }}</span>
+                                            @else
+                                                <span class="badge badge--warning">@lang('Free')</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($data->position == Status::LEFT)
+                                                <span class="badge badge--primary">@lang('Left')</span>
+                                            @elseif ($data->position == Status::RIGHT)
+                                                <span class="badge badge--info">@lang('Right')</span>
+                                            @else
+                                                <span class="badge badge--dark">@lang('N/A')</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             {{ showDateTime($data->created_at) }}
                                         </td>
