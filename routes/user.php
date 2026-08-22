@@ -75,9 +75,21 @@ Route::middleware('auth')->name('user.')->group(function () {
 
                 //Orders
                 Route::get('orders', 'orders')->name('orders');
+                Route::get('orders/{id}/invoice/download', 'invoiceDownload')->name('orders.invoice.download');
+                Route::get('orders/{id}/invoice', 'invoice')->name('orders.invoice');
 
                 //purchase
                 Route::post('purchase', 'purchase')->name('purchase');
+            });
+
+            Route::controller('AddressController')->prefix('addresses')->name('addresses.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('{id}/edit', 'edit')->name('edit');
+                Route::post('{id}', 'update')->name('update');
+                Route::post('{id}/delete', 'destroy')->name('delete');
+                Route::post('{id}/default', 'setDefault')->name('default');
             });
 
             //Profile setting

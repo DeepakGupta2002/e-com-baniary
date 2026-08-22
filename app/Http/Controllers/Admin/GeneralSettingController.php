@@ -36,6 +36,16 @@ class GeneralSettingController extends Controller
             'paginate_number'=>'required|integer',
             'bal_trans_fixed_charge'=>'required|numeric|gte:0',
             'bal_trans_per_charge'=>'required|numeric|gte:0',
+            'gst_status' => 'nullable|boolean',
+            'gst_type' => 'required|in:inclusive,exclusive',
+            'gst_percent' => 'required|numeric|gte:0|max:100',
+            'company_name' => 'nullable|string|max:120',
+            'company_address' => 'nullable|string|max:1000',
+            'company_mobile' => 'nullable|string|max:40',
+            'company_email' => 'nullable|email|max:120',
+            'company_gstin' => 'nullable|string|max:40',
+            'company_pan' => 'nullable|string|max:20',
+            'invoice_prefix' => 'nullable|string|max:20',
         ]);
 
         $timezones = timezone_identifiers_list();
@@ -51,6 +61,16 @@ class GeneralSettingController extends Controller
         $general->currency_format = $request->currency_format;
         $general->bal_trans_fixed_charge = $request->bal_trans_fixed_charge;
         $general->bal_trans_per_charge = $request->bal_trans_per_charge;
+        $general->gst_status = $request->gst_status ? Status::ENABLE : Status::DISABLE;
+        $general->gst_type = $request->gst_type;
+        $general->gst_percent = $request->gst_percent;
+        $general->company_name = $request->company_name;
+        $general->company_address = $request->company_address;
+        $general->company_mobile = $request->company_mobile;
+        $general->company_email = $request->company_email;
+        $general->company_gstin = $request->company_gstin;
+        $general->company_pan = $request->company_pan;
+        $general->invoice_prefix = $request->invoice_prefix ?: 'INV';
         $general->save();
 
         $timezoneFile = config_path('timezone.php');

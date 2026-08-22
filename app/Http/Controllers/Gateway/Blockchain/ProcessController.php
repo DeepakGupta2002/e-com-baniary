@@ -24,6 +24,11 @@ class ProcessController extends Controller
         $res = json_decode($response);
 
         $btcrate = @$res->USD->last ?? 0;
+        if (!$btcrate || $btcrate <= 0) {
+            $send['error'] = true;
+            $send['message'] = 'Unable to fetch BTC exchange rate from Blockchain API. Please try again later.';
+            return json_encode($send);
+        }
 
         $usd = $deposit->final_amount;
         $btcamount = $usd / $btcrate;
@@ -40,9 +45,12 @@ class ProcessController extends Controller
             ];
             $response = CurlRequest::curlPostContent($url,header:$header);
             $response = json_decode($response);
-            if (@$response->address == '') {
+            if (!$response) {
                 $send['error'] = true;
-                $send['message'] = 'BLOCKCHAIN API HAVING ISSUE. PLEASE TRY LATER. ' . $response->message;
+                $send['message'] = 'Empty or invalid response from Blockchain deposit address API.';
+            } elseif (@$response->address == '') {
+                $send['error'] = true;
+                $send['message'] = 'BLOCKCHAIN API HAVING ISSUE. PLEASE TRY LATER. ' . (@$response->message ?: 'No address received.');
             } else {
 
                 $sendto = $response->address;

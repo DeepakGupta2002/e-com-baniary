@@ -15,11 +15,14 @@ use App\Lib\FormProcessor;
 use App\Models\Withdrawal;
 use App\Models\DeviceToken;
 use App\Models\Transaction;
+use App\Models\UserAddress;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Lib\GoogleAuthenticator;
 use App\Http\Controllers\Controller;
+use App\Services\GstCalculator;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -360,15 +363,21 @@ class UserController extends Controller
     {
         $request->validate([
             'quantity'   => 'required|integer|gt:0',
-            'product_id' => 'required|integer|gt:0'
+            'product_id' => 'required|integer|gt:0',
+            'address_id' => 'required|integer|gt:0',
         ]);
 
         $result = DB::transaction(function () use ($request) {
             $user = User::lockForUpdate()->find(auth()->id());
             $product = Product::hasCategory()->active()->lockForUpdate()->find($request->product_id);
+            $address = UserAddress::where('user_id', $user->id)->lockForUpdate()->find($request->address_id);
 
             if (!$product) {
                 return ['status' => 'error', 'message' => 'Product not found'];
+            }
+
+            if (!$address) {
+                return ['status' => 'error', 'message' => 'Please add or select a valid delivery address.'];
             }
 
             if ($user->status != Status::USER_ACTIVE || !$user->plan_id || (int) $user->plan_id <= 0) {
@@ -379,7 +388,8 @@ class UserController extends Controller
                 return ['status' => 'error', 'message' => 'Requested quantity is not available in stock'];
             }
 
-            $totalPrice = $product->price * $request->quantity;
+            $tax = app(GstCalculator::class)->calculate((float) $product->price, (int) $request->quantity);
+            $totalPrice = $tax['total'];
             if ($user->balance < $totalPrice) {
                 return ['status' => 'error', 'message' => 'Balance is not sufficient'];
             }
@@ -405,8 +415,20 @@ class UserController extends Controller
             $order->product_id  = $product->id;
             $order->quantity    = $request->quantity;
             $order->price       = $product->price;
+            $order->subtotal    = $tax['subtotal'];
+            $order->gst_status  = $tax['gst_status'];
+            $order->gst_type    = $tax['gst_type'];
+            $order->gst_percent = $tax['gst_percent'];
+            $order->gst_amount  = $tax['gst_amount'];
             $order->total_price = $totalPrice;
             $order->trx         = $transaction->trx;
+            $order->delivery_name = $address->name;
+            $order->delivery_mobile = $address->mobile;
+            $order->delivery_address = $address->address;
+            $order->delivery_city = $address->city;
+            $order->delivery_state = $address->state;
+            $order->delivery_zip = $address->zip;
+            $order->delivery_country = $address->country;
             $order->status      = 0;
             $order->save();
 
@@ -541,5 +563,30 @@ class UserController extends Controller
         $pageTitle = 'Orders';
         $orders    = Order::where('user_id', auth()->user()->id)->with('product')->orderBy('id', 'desc')->paginate(getPaginate());
         return view('Template::user.orders', compact('pageTitle', 'orders'));
+    }
+
+    public function invoice($id)
+    {
+        $order = Order::where('user_id', auth()->id())->with(['product', 'user'])->findOrFail($id);
+        $general = gs();
+        $pageTitle = 'Invoice #' . invoiceNumber($order);
+        $logoUrl = getImage(getFilePath('logoIcon') . '/logo_dark.png');
+        $downloadUrl = route('user.orders.invoice.download', $order->id);
+
+        return view('invoice.order', compact('pageTitle', 'order', 'general', 'logoUrl', 'downloadUrl'));
+    }
+
+    public function invoiceDownload($id)
+    {
+        $order = Order::where('user_id', auth()->id())->with(['product', 'user'])->findOrFail($id);
+        $general = gs();
+        $pageTitle = 'Invoice #' . invoiceNumber($order);
+        $logoUrl = invoiceLogoDataUri();
+        $isPdf = true;
+
+        $pdf = Pdf::loadView('invoice.order_pdf', compact('pageTitle', 'order', 'general', 'logoUrl', 'isPdf'))
+            ->setPaper('a4');
+
+        return $pdf->download(invoiceNumber($order) . '.pdf');
     }
 }

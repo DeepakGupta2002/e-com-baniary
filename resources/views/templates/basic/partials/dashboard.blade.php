@@ -72,6 +72,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('user.addresses.index') }}" class="{{menuActive('user.addresses*')}}">
+                                @lang('My Addresses')
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('user.balance.transfer') }}" class="{{menuActive('user.balance.transfer')}}">
                                 @lang('Balance Transfer')
                             </a>

@@ -385,6 +385,8 @@ Route::middleware('admin')->group(function () {
 
     //Order
     Route::controller('OrderController')->name('order.')->prefix('order')->group(function () {
+        Route::get('invoice/{id}/download', 'invoiceDownload')->name('invoice.download');
+        Route::get('invoice/{id}', 'invoice')->name('invoice');
         Route::get('/{user_id?}', 'index')->name('index');
         Route::post('status/{id}', 'OrderController@status')->name('status');
     });

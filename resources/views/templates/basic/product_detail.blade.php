@@ -152,33 +152,33 @@
                 </div>
             </div>
             <div class="product-slider owl-carousel owl-theme owl-loaded owl-drag">
-                @foreach ($relates as $product)
+                @foreach ($relates as $relatedProduct)
                     <div class="owl-item">
                         <div class="product-item h-100">
                             <div class="product-thumb">
-                                <img src="{{ getImage(getFilePath('products') . '/' . $product->thumbnail, getFileSize('products')) }}" alt="products">
+                                <img src="{{ getImage(getFilePath('products') . '/' . $relatedProduct->thumbnail, getFileSize('products')) }}" alt="products">
                                 <ul class="product-options">
                                     <li><a class="image"
-                                            href="{{ getImage(getFilePath('products') . '/' . $product->thumbnail, getFileSize('products')) }}"><i
+                                            href="{{ getImage(getFilePath('products') . '/' . $relatedProduct->thumbnail, getFileSize('products')) }}"><i
                                                 class="las la-expand"></i></a></li>
                                 </ul>
                             </div>
                             <div class="product-content">
                                 <h6 class="product-title"><a
-                                        href="{{ route('product.details', ['id' => $product->id, 'slug' => slug($product->name)]) }}">{{ __(shortDescription($product->name, 35)) }}</a>
+                                        href="{{ route('product.details', ['id' => $relatedProduct->id, 'slug' => slug($relatedProduct->name)]) }}">{{ __(shortDescription($relatedProduct->name, 35)) }}</a>
                                 </h6>
 
-                                @if ($product->quantity >= 0)
+                                @if ($relatedProduct->quantity >= 0)
                                     <span class="product-availablity text--success">@lang('in stock')</span>
                                 @else
                                     <span class="product-availablity text--danger">@lang('out stock')</span>
                                 @endif
 
                                 <div class="product-price">
-                                    <span class="current-price">{{ showAmount($product->price) }}</span>
+                                    <span class="current-price">{{ showAmount($relatedProduct->price) }}</span>
                                 </div>
                                 <a class="add-to-cart cmn--btn-2"
-                                    href="{{ route('product.details', ['id' => $product->id, 'slug' => slug($product->name)]) }}">@lang('Details')</a>
+                                    href="{{ route('product.details', ['id' => $relatedProduct->id, 'slug' => slug($relatedProduct->name)]) }}">@lang('Details')</a>
                             </div>
                         </div>
                     </div>
@@ -206,15 +206,114 @@
                         <input name="quantity" type="hidden">
                         <input name="product_id" type="hidden">
                         <h6>@lang('Are you sure to buy') <span class="quantity"></span> @lang('pieces') "<span class="p_name"></span>"</h6>
+                        @php
+                            $gstEnabled = (bool) gs('gst_status') && (float) gs('gst_percent') > 0;
+                            $gstType = gs('gst_type') ?: 'exclusive';
+                        @endphp
+                        <div class="purchase-tax-preview border rounded p-2 mt-3">
+                            <div class="d-flex justify-content-between">
+                                <span>@lang('Subtotal')</span>
+                                <strong class="preview-subtotal"></strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    @lang('GST')
+                                    @if ($gstEnabled)
+                                        ({{ getAmount(gs('gst_percent')) }}%, {{ __(ucfirst($gstType)) }})
+                                    @endif
+                                </span>
+                                <strong class="preview-gst"></strong>
+                            </div>
+                            <div class="d-flex justify-content-between border-top mt-2 pt-2">
+                                <span>@lang('Payable Amount')</span>
+                                <strong class="preview-total"></strong>
+                            </div>
+                        </div>
+                        @auth
+                            @php
+                                $deliveryAddresses = auth()->user()->addresses()->orderByDesc('is_default')->latest('id')->get();
+                            @endphp
+                            <div class="form-group mt-3">
+                                <label class="form--label">@lang('Delivery Address')</label>
+                                @if ($deliveryAddresses->count())
+                                    <select class="form-control form--control deliveryAddressSelect" name="address_id" required>
+                                        @foreach ($deliveryAddresses as $address)
+                                            <option value="{{ $address->id }}" data-name="{{ $address->name }}" data-mobile="{{ $address->mobile }}"
+                                                data-address="{{ $address->address }}" data-city="{{ $address->city }}" data-state="{{ $address->state }}"
+                                                data-zip="{{ $address->zip }}" data-country="{{ $address->country }}" data-default="{{ $address->is_default ? 1 : 0 }}"
+                                                data-update-url="{{ route('user.addresses.update', $address->id) }}" @selected($address->is_default)>
+                                                {{ $address->name }} - {{ strLimit($address->fullAddress(), 80) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <button class="btn btn-sm btn-outline--base addAddressBtn" type="button">@lang('Add New Address')</button>
+                                        <button class="btn btn-sm btn-outline--primary editAddressBtn" type="button">@lang('Edit Selected')</button>
+                                        <a class="btn btn-sm btn-outline--dark" href="{{ route('user.addresses.index') }}">@lang('Manage All')</a>
+                                    </div>
+                                @else
+                                    <div class="alert alert-warning mb-0">
+                                        @lang('Please add a delivery address before purchasing.')
+                                    </div>
+                                    <button class="btn btn-sm btn-outline--base addAddressBtn mt-2" type="button">@lang('Add Address')</button>
+                                @endif
+                            </div>
+                        @endauth
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn--dark" data-bs-dismiss="modal" type="button">@lang('Close')</button>
-                        <button class="btn btn--base" type="submit">@lang('Purchase')</button>
+                        <button class="btn btn--base" type="submit" @auth @disabled($deliveryAddresses->isEmpty()) @endauth>@lang('Purchase')</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @auth
+        <div class="modal fade" id="addAddressModal" aria-hidden="true" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@lang('Add Delivery Address')</h5>
+                        <button class="btn-close" data-bs-dismiss="modal" type="button" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('user.addresses.store') }}" method="POST">
+                        @csrf
+                        <input name="redirect_to" type="hidden" value="{{ url()->current() }}">
+                        <div class="modal-body">
+                            @include($activeTemplate . 'user.addresses.partials.fields', ['address' => null])
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn--dark" data-bs-dismiss="modal" type="button">@lang('Close')</button>
+                            <button class="btn btn--base" type="submit">@lang('Save Address')</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editAddressModal" aria-hidden="true" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@lang('Edit Delivery Address')</h5>
+                        <button class="btn-close" data-bs-dismiss="modal" type="button" aria-label="Close"></button>
+                    </div>
+                    <form method="POST">
+                        @csrf
+                        <input name="redirect_to" type="hidden" value="{{ url()->current() }}">
+                        <div class="modal-body">
+                            @include($activeTemplate . 'user.addresses.partials.fields', ['address' => null, 'prefix' => 'edit_'])
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn--dark" data-bs-dismiss="modal" type="button">@lang('Close')</button>
+                            <button class="btn btn--base" type="submit">@lang('Update Address')</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endauth
 @endpush
 
 @push('script')
@@ -225,10 +324,60 @@
             $('.purchaseBtn').on('click', function() {
                 var counter = $('.cart-count').val();
                 var modal = $('#purchaseModal');
+                var unitPrice = parseFloat(`{{ $product->price + 0 }}`);
+                var gstEnabled = Number(`{{ $gstEnabled ? 1 : 0 }}`) === 1;
+                var gstPercent = parseFloat(`{{ gs('gst_percent') + 0 }}`);
+                var gstType = `{{ $gstType }}`;
+                var subtotal = unitPrice * counter;
+                var gstAmount = 0;
+                var total = subtotal;
+
+                if (gstEnabled && gstPercent > 0) {
+                    if (gstType === 'inclusive') {
+                        var taxable = subtotal / (1 + (gstPercent / 100));
+                        gstAmount = subtotal - taxable;
+                        subtotal = taxable;
+                        total = unitPrice * counter;
+                    } else {
+                        gstAmount = subtotal * (gstPercent / 100);
+                        total = subtotal + gstAmount;
+                    }
+                }
+
                 modal.find('input[name=quantity]').val(counter);
                 modal.find('input[name=product_id]').val($(this).data('id'));
                 modal.find('.p_name').text($(this).data('name'));
                 modal.find('.quantity').text(counter);
+                modal.find('.preview-subtotal').text(`{{ gs('cur_sym') }}${subtotal.toFixed(2)}`);
+                modal.find('.preview-gst').text(`{{ gs('cur_sym') }}${gstAmount.toFixed(2)}`);
+                modal.find('.preview-total').text(`{{ gs('cur_sym') }}${total.toFixed(2)}`);
+                modal.modal('show');
+            });
+
+            $('.addAddressBtn').on('click', function() {
+                $('#purchaseModal').modal('hide');
+                $('#addAddressModal').modal('show');
+            });
+
+            $('.editAddressBtn').on('click', function() {
+                var selected = $('.deliveryAddressSelect option:selected');
+
+                if (!selected.length) {
+                    return;
+                }
+
+                var modal = $('#editAddressModal');
+                modal.find('form').attr('action', selected.data('update-url'));
+                modal.find('[name=name]').val(selected.data('name'));
+                modal.find('[name=mobile]').val(selected.data('mobile'));
+                modal.find('[name=address]').val(selected.data('address'));
+                modal.find('[name=city]').val(selected.data('city'));
+                modal.find('[name=state]').val(selected.data('state'));
+                modal.find('[name=zip]').val(selected.data('zip'));
+                modal.find('[name=country]').val(selected.data('country'));
+                modal.find('[name=is_default]').prop('checked', Number(selected.data('default')) === 1);
+
+                $('#purchaseModal').modal('hide');
                 modal.modal('show');
             });
         })(jQuery);

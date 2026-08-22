@@ -191,4 +191,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(RepurchaseMatchingLog::class);
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(UserAddress::class)->where('is_default', true);
+    }
 }

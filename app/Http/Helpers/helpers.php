@@ -475,6 +475,30 @@ function isImage($string)
     }
 }
 
+function invoiceNumber($order)
+{
+    $prefix = gs('invoice_prefix') ?: 'INV';
+    return $prefix . '-' . str_pad($order->id, 6, '0', STR_PAD_LEFT);
+}
+
+function invoiceLogoDataUri()
+{
+    $logoPath = public_path(getFilePath('logoIcon') . '/invoice_logo.jpg');
+
+    if (!file_exists($logoPath)) {
+        $logoPath = public_path(getFilePath('logoIcon') . '/favicon.png');
+    }
+
+    if (!file_exists($logoPath)) {
+        return null;
+    }
+
+    $logoContent = file_get_contents($logoPath);
+    $mimeType = str_ends_with(strtolower($logoPath), '.jpg') || str_ends_with(strtolower($logoPath), '.jpeg') ? 'image/jpeg' : 'image/png';
+
+    return $logoContent ? 'data:' . $mimeType . ';base64,' . base64_encode($logoContent) : null;
+}
+
 function isHtml($string)
 {
     if (preg_match('/<.*?>/', $string)) {

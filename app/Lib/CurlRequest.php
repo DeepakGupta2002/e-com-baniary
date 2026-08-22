@@ -14,6 +14,7 @@ class CurlRequest
 	{
 	    $ch = curl_init();
 	    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+	    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 	    if ($header) {
 	    	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 	    }

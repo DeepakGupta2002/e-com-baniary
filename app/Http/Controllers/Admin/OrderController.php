@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\RepurchaseBVService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -23,6 +24,31 @@ class OrderController extends Controller
 
         $emptyMessage = 'Order not found';
         return view('admin.orders', compact('pageTitle', 'orders', 'emptyMessage'));
+    }
+
+    public function invoice($id)
+    {
+        $order = Order::with(['product', 'user'])->findOrFail($id);
+        $general = gs();
+        $pageTitle = 'Invoice #' . invoiceNumber($order);
+        $logoUrl = getImage(getFilePath('logoIcon') . '/logo_dark.png');
+        $downloadUrl = route('admin.order.invoice.download', $order->id);
+
+        return view('invoice.order', compact('pageTitle', 'order', 'general', 'logoUrl', 'downloadUrl'));
+    }
+
+    public function invoiceDownload($id)
+    {
+        $order = Order::with(['product', 'user'])->findOrFail($id);
+        $general = gs();
+        $pageTitle = 'Invoice #' . invoiceNumber($order);
+        $logoUrl = invoiceLogoDataUri();
+        $isPdf = true;
+
+        $pdf = Pdf::loadView('invoice.order_pdf', compact('pageTitle', 'order', 'general', 'logoUrl', 'isPdf'))
+            ->setPaper('a4');
+
+        return $pdf->download(invoiceNumber($order) . '.pdf');
     }
 
     public function status(Request $request, $id)

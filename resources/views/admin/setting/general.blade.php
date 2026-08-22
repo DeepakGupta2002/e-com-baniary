@@ -87,6 +87,56 @@
                                 </div>
                             </div>
 
+                            <div class="form-group col-sm-6">
+                                <label>@lang('GST Status')</label>
+                                <select class="select2 form-control" name="gst_status" data-minimum-results-for-search="-1">
+                                    <option value="0" @selected(!gs('gst_status'))>@lang('Disabled')</option>
+                                    <option value="1" @selected(gs('gst_status'))>@lang('Enabled')</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('GST Type')</label>
+                                <select class="select2 form-control" name="gst_type" data-minimum-results-for-search="-1">
+                                    <option value="exclusive" @selected(gs('gst_type') == 'exclusive')>@lang('Exclusive - GST added on product price')</option>
+                                    <option value="inclusive" @selected(gs('gst_type') == 'inclusive')>@lang('Inclusive - GST included in product price')</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('GST Percentage')</label>
+                                <div class="input-group">
+                                    <input class="form-control" name="gst_percent" type="number" value="{{ getAmount(gs('gst_percent')) }}" step="any" min="0" max="100">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Company Name')</label>
+                                <input class="form-control" name="company_name" type="text" value="{{ gs('company_name') }}">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Company Mobile')</label>
+                                <input class="form-control" name="company_mobile" type="text" value="{{ gs('company_mobile') }}">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Company Email')</label>
+                                <input class="form-control" name="company_email" type="email" value="{{ gs('company_email') }}">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Company GSTIN')</label>
+                                <input class="form-control" name="company_gstin" type="text" value="{{ gs('company_gstin') }}">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Company PAN')</label>
+                                <input class="form-control" name="company_pan" type="text" value="{{ gs('company_pan') }}">
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Invoice Prefix')</label>
+                                <input class="form-control" name="invoice_prefix" type="text" value="{{ gs('invoice_prefix') ?: 'INV' }}">
+                            </div>
+                            <div class="form-group col-sm-12">
+                                <label>@lang('Company Address')</label>
+                                <textarea class="form-control" name="company_address" rows="3">{{ gs('company_address') }}</textarea>
+                            </div>
+
                         </div>
 
                         <button class="btn btn--primary w-100 h-45" type="submit">@lang('Submit')</button>

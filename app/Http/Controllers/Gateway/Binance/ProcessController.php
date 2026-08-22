@@ -45,15 +45,20 @@ class ProcessController extends Controller
         $headers[]          = "BinancePay-Signature: $signature";
 
         $result = CurlRequest::curlPostContent('https://bpay.binanceapi.com/binancepay/openapi/v2/order',$request,$headers);
-
         $result = json_decode($result);
+
+        if (!$result) {
+            $send['error'] = true;
+            $send['message'] = 'Empty or invalid response from Binance Pay API';
+            return json_encode($send);
+        }
 
         if (@$result->status == "SUCCESS") {
             $send['redirect'] = true;
             $send['redirect_url'] = @$result->data->checkoutUrl;
         } else {
             $send['error']     = true;
-            $send['message'] = (@$result->msg) ? @$result->errorMessage : 'Something went wrong';
+            $send['message'] = @$result->errorMessage ?: (@$result->msg ?: (@$result->code ? 'Binance Pay API error: ' . $result->code : 'Something went wrong'));
         }
         return json_encode($send);
     }
