@@ -20,9 +20,13 @@
                                 @forelse($logs as $data)
                                     <tr>
                                         <td>
-                                            <span class="fw-bold">{{ $data->user->fullname }}</span>
-                                            <br>
-                                            <span class="small"> <a href="{{ appendQuery('search', $data->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span>
+                                            @if ($data->user)
+                                                <span class="fw-bold">{{ $data->user->fullname }}</span>
+                                                <br>
+                                                <span class="small"> <a href="{{ appendQuery('search', $data->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span>
+                                            @else
+                                                <span class="fw-bold">@lang('Deleted User')</span>
+                                            @endif
                                         </td>
                                         <td class="budget">
                                             <strong @if ($data->trx_type == '+') class="text-success"

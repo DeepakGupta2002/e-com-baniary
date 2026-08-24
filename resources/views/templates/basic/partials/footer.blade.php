@@ -26,6 +26,7 @@
                             <li><a href="{{ route('products') }}"><i class="las la-angle-double-right"></i>@lang('Products')</a></li>
                             <li><a href="{{ route('blog') }}"><i class="las la-angle-double-right"></i>@lang('Blog')</a></li>
                             <li><a href="{{ route('contact') }}"><i class="las la-angle-double-right"></i>@lang('Contact')</a></li>
+                            <li><a href="{{ route('legal.documents') }}"><i class="las la-angle-double-right"></i>@lang('Legal Documents')</a></li>
                         </ul>
                     </div>
                 </div>

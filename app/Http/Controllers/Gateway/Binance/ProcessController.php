@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Gateway\PaymentController;
 use App\Lib\CurlRequest;
 use App\Models\Deposit;
-use App\Models\Gateway;
+use App\Models\Gateway;  
 use Illuminate\Support\Str;
 
 class ProcessController extends Controller

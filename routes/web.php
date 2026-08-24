@@ -35,6 +35,7 @@ Route::controller('SiteController')->group(function () {
     Route::get('/blog', 'blog')->name('blog');
     Route::get('blog/{slug}', 'blogDetails')->name('blog.details');
     Route::get('faq', 'faq')->name('faq');
+    Route::get('legal-documents', 'legalDocuments')->name('legal.documents');
 
     Route::post('/check/referral', 'checkUsername')->name('check.referral');
     Route::post('/get/user/position', 'userPosition')->name('get.user.position');

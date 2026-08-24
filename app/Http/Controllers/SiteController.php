@@ -15,6 +15,7 @@ use App\Models\SupportTicket;
 use App\Models\SupportMessage;
 use App\Models\AdminNotification;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\File;
 
 
 class SiteController extends Controller
@@ -143,6 +144,29 @@ class SiteController extends Controller
         $pageTitle = 'FAQs';
         $sections  = Page::where('tempname', activeTemplate())->where('slug', 'faq')->firstOrFail();
         return view('Template::faq', compact('pageTitle', 'sections'));
+    }
+
+    public function legalDocuments()
+    {
+        $pageTitle = 'Legal Documents';
+        $path = public_path('assets/images/legal-documents');
+        $documents = collect();
+
+        if (File::isDirectory($path)) {
+            $documents = collect(File::files($path))
+                ->filter(function ($file) {
+                    return in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']);
+                })
+                ->map(function ($file) {
+                    return (object) [
+                        'title' => ucwords(str_replace(['-', '_'], ' ', pathinfo($file->getFilename(), PATHINFO_FILENAME))),
+                        'url'   => asset('assets/images/legal-documents/' . $file->getFilename()),
+                    ];
+                })
+                ->values();
+        }
+
+        return view('Template::legal_documents', compact('pageTitle', 'documents'));
     }
 
 
