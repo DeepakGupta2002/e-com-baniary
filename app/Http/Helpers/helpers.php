@@ -790,7 +790,18 @@ function getTreePlanBorderClass($planName)
 
 function getCurrentRankName($user)
 {
-    return $user?->currentRank?->name ?? 'N/A';
+    if (!$user) {
+        return 'N/A';
+    }
+
+    $matchedRankBv = app(\App\Services\RankRewardService::class)->matchedRankBv($user->id);
+    $rank = \App\Models\Rank::where('status', 1)
+        ->where('required_team_dp', '<=', $matchedRankBv)
+        ->orderByDesc('required_team_dp')
+        ->orderByDesc('sort_order')
+        ->first();
+
+    return $rank?->name ?? 'N/A';
 }
 
 function showSingleUserinTree($user)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Rank;
 use App\Models\RankRewardLog;
 use App\Models\User;
+use App\Services\RankRewardService;
 use Illuminate\Http\Request;
 
 class RankRewardController extends Controller
@@ -19,8 +20,9 @@ class RankRewardController extends Controller
             ->dateFilter()
             ->latest('id')
             ->paginate(getPaginate());
+        $rankMatchedBv = app(RankRewardService::class)->matchedRankBv(auth()->id());
 
-        return view(activeTemplate() . 'user.rank_reward', compact('pageTitle', 'logs'));
+        return view(activeTemplate() . 'user.rank_reward', compact('pageTitle', 'logs', 'rankMatchedBv'));
     }
 
     public function leaderboard()

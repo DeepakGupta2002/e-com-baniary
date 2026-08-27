@@ -22,6 +22,7 @@ use Illuminate\Validation\Rule;
 use App\Lib\GoogleAuthenticator;
 use App\Http\Controllers\Controller;
 use App\Services\GstCalculator;
+use App\Services\RankRewardService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -46,8 +47,9 @@ class UserController extends Controller
         $user = auth()->user();
         $fastStartWindow = $this->fastStartWindow($user);
         $binaryMatchingStatus = $this->binaryMatchingStatus($user);
+        $rankMatchedBv = app(RankRewardService::class)->matchedRankBv($user->id);
 
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus'));
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus', 'rankMatchedBv'));
     }
 
     private function fastStartWindow(User $user): array

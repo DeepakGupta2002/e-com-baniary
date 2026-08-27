@@ -6,21 +6,26 @@ use App\Models\Rank;
 use App\Models\RankRewardLog;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\BvLog;
 
 class RankRewardService
 {
     public function checkRankReward(User $user): void
     {
         $user = User::with('currentRank')->lockForUpdate()->findOrFail($user->id);
+        $matchedRankBv = $this->matchedRankBv($user->id);
 
         $eligibleRanks = Rank::where('status', 1)
-            ->where('required_team_dp', '<=', $user->total_team_dp)
+            ->where('required_team_dp', '<=', $matchedRankBv)
             ->orderBy('required_team_dp')
             ->orderBy('sort_order')
             ->lockForUpdate()
             ->get();
 
+        $currentRankId = null;
         foreach ($eligibleRanks as $rank) {
+            $currentRankId = $rank->id;
+
             if ($this->alreadyRewarded($user->id, $rank->id)) {
                 $user->current_rank_id = $rank->id;
                 $user->save();
@@ -29,6 +34,11 @@ class RankRewardService
 
             $this->creditRankReward($user, $rank);
             $user->refresh();
+        }
+
+        if ($user->current_rank_id !== $currentRankId) {
+            $user->current_rank_id = $currentRankId;
+            $user->save();
         }
     }
 
@@ -59,7 +69,7 @@ class RankRewardService
         RankRewardLog::create([
             'user_id' => $user->id,
             'rank_id' => $rank->id,
-            'team_dp' => getAmount($user->total_team_dp, 8),
+            'team_dp' => getAmount($this->matchedRankBv($user->id), 8),
             'reward_amount' => $rewardAmount,
             'transaction_id' => $transaction->id,
             'status' => 'paid',
@@ -76,5 +86,13 @@ class RankRewardService
         return RankRewardLog::where('user_id', $userId)
             ->where('rank_id', $rankId)
             ->exists();
+    }
+
+    public function matchedRankBv(int $userId): float
+    {
+        $leftBv = BvLog::where('user_id', $userId)->leftBV()->sum('amount');
+        $rightBv = BvLog::where('user_id', $userId)->rightBV()->sum('amount');
+
+        return getAmount(min((float) $leftBv, (float) $rightBv), 8);
     }
 }
