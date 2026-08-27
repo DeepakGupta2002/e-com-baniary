@@ -5,7 +5,7 @@
         <div class="leaderboard-head">
             <div>
                 <h4 class="leaderboard-title">@lang('Leaderboard')</h4>
-                <p class="leaderboard-subtitle">@lang('Track top performers by team BV and rank progress.')</p>
+                <p class="leaderboard-subtitle">@lang('Track top performers by matched BV and rank progress.')</p>
             </div>
             <div class="leaderboard-self">
                 <span>@lang('Your Position')</span>
@@ -31,7 +31,7 @@
                             <h6>{{ $topLeader->username }}</h6>
                             <span>{{ getCurrentRankName($topLeader) }}</span>
                         </div>
-                        <div class="podium-dp">{{ getAmount($topLeader->total_team_dp) }} @lang('BV')</div>
+                        <div class="podium-dp">{{ getAmount($topLeader->rank_matched_bv) }} @lang('Matched BV')</div>
                     </div>
                 @endforeach
             </div>
@@ -59,7 +59,7 @@
                                 <th>@lang('Position')</th>
                                 <th>@lang('Member')</th>
                                 <th>@lang('Current Rank')</th>
-                                <th>@lang('Total Team BV')</th>
+                                <th>@lang('Rank Matched BV')</th>
                                 <th>@lang('Progress')</th>
                             </tr>
                         </thead>
@@ -67,11 +67,12 @@
                             @forelse($leaders as $leader)
                                 @php
                                     $currentRank = getCurrentRankName($leader);
-                                    $nextRank = $activeRanks->first(fn ($rank) => (float) $rank->required_team_dp > (float) $leader->total_team_dp);
-                                    $previousRankDp = optional($activeRanks->filter(fn ($rank) => (float) $rank->required_team_dp <= (float) $leader->total_team_dp)->last())->required_team_dp ?? 0;
-                                    $nextRequiredDp = $nextRank?->required_team_dp ?? max((float) $leader->total_team_dp, 1);
+                                    $rankMatchedBv = (float) $leader->rank_matched_bv;
+                                    $nextRank = $activeRanks->first(fn ($rank) => (float) $rank->required_team_dp > $rankMatchedBv);
+                                    $previousRankDp = optional($activeRanks->filter(fn ($rank) => (float) $rank->required_team_dp <= $rankMatchedBv)->last())->required_team_dp ?? 0;
+                                    $nextRequiredDp = $nextRank?->required_team_dp ?? max($rankMatchedBv, 1);
                                     $progressBase = max((float) $nextRequiredDp - (float) $previousRankDp, 1);
-                                    $progressValue = min(100, max(0, (((float) $leader->total_team_dp - (float) $previousRankDp) / $progressBase) * 100));
+                                    $progressValue = min(100, max(0, (($rankMatchedBv - (float) $previousRankDp) / $progressBase) * 100));
                                     if (!$nextRank) {
                                         $progressValue = 100;
                                     }
@@ -94,14 +95,14 @@
                                         </div>
                                     </td>
                                     <td><span class="badge badge--primary">{{ $currentRank }}</span></td>
-                                    <td>{{ getAmount($leader->total_team_dp) }}</td>
+                                    <td>{{ getAmount($rankMatchedBv) }}</td>
                                     <td>
                                         <div class="leader-progress">
                                             <div class="leader-progress-bar" style="width: {{ getAmount($progressValue) }}%"></div>
                                         </div>
                                         <small>
                                             @if ($nextRank)
-                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - (float) $leader->total_team_dp)) }} @lang('BV to') {{ __($nextRank->name) }}
+                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - $rankMatchedBv)) }} @lang('Matched BV to') {{ __($nextRank->name) }}
                                             @else
                                                 @lang('Top rank achieved')
                                             @endif

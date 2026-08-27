@@ -8,6 +8,7 @@ use App\Models\RankRewardLog;
 use App\Models\User;
 use App\Services\RankRewardService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class RankRewardController extends Controller
 {
@@ -30,31 +31,49 @@ class RankRewardController extends Controller
         $pageTitle = 'Leaderboard';
         $user = auth()->user();
         $activeRanks = Rank::where('status', 1)->orderBy('sort_order')->orderBy('required_team_dp')->get();
-        $topLeaders = User::with('currentRank')
+        $rankRewardService = app(RankRewardService::class);
+        $rankedLeaders = User::with('currentRank')
             ->where('total_team_dp', '>', 0)
-            ->orderByDesc('total_team_dp')
-            ->orderBy('id')
-            ->limit(3)
-            ->get();
+            ->get()
+            ->map(function (User $leader) use ($rankRewardService) {
+                $leader->rank_matched_bv = $rankRewardService->matchedRankBv($leader->id);
+                return $leader;
+            })
+            ->filter(fn (User $leader) => (float) $leader->rank_matched_bv > 0)
+            ->sortBy([
+                ['rank_matched_bv', 'desc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+        $topLeaders = $rankedLeaders->take(3);
 
         $userPosition = null;
-        if ((float) $user->total_team_dp > 0) {
-            $userPosition = User::where('total_team_dp', '>', 0)
-                    ->where(function ($query) use ($user) {
-                        $query->where('total_team_dp', '>', $user->total_team_dp)
-                            ->orWhere(function ($query) use ($user) {
-                                $query->where('total_team_dp', $user->total_team_dp)
-                                    ->where('id', '<', $user->id);
-                            });
-                    })
-                    ->count() + 1;
-        }
+        $rankedLeaders->each(function (User $leader, int $index) use ($user, &$userPosition) {
+            if ((int) $leader->id === (int) $user->id) {
+                $userPosition = $index + 1;
+            }
+        });
 
-        $leaders = User::with('currentRank')
-            ->where('total_team_dp', '>', 0)
-            ->orderByDesc('total_team_dp')
-            ->orderBy('id')
-            ->paginate(getPaginate());
+        $perPage = getPaginate();
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $leaders = new LengthAwarePaginator(
+            $rankedLeaders->forPage($page, $perPage)->values(),
+            $rankedLeaders->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        if ($leaders->isEmpty() && $page > 1) {
+            $page = 1;
+            $leaders = new LengthAwarePaginator(
+                $rankedLeaders->forPage($page, $perPage)->values(),
+                $rankedLeaders->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+        }
 
         return view(activeTemplate() . 'user.leaderboard', compact('pageTitle', 'leaders', 'topLeaders', 'activeRanks', 'userPosition'));
     }

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Rank;
 use App\Models\RankRewardLog;
 use App\Models\User;
+use App\Services\RankRewardService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class RankController extends Controller
 {
@@ -58,11 +60,30 @@ class RankController extends Controller
     public function leaderboard()
     {
         $pageTitle = 'Rank Leaderboard';
-        $leaders = User::with('currentRank')
+        $rankRewardService = app(RankRewardService::class);
+        $rankedLeaders = User::with('currentRank')
             ->where('total_team_dp', '>', 0)
-            ->orderByDesc('total_team_dp')
-            ->orderBy('id')
-            ->paginate(getPaginate());
+            ->get()
+            ->map(function (User $leader) use ($rankRewardService) {
+                $leader->rank_matched_bv = $rankRewardService->matchedRankBv($leader->id);
+                return $leader;
+            })
+            ->filter(fn (User $leader) => (float) $leader->rank_matched_bv > 0)
+            ->sortBy([
+                ['rank_matched_bv', 'desc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+
+        $perPage = getPaginate();
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $leaders = new LengthAwarePaginator(
+            $rankedLeaders->forPage($page, $perPage)->values(),
+            $rankedLeaders->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('admin.rank.leaderboard', compact('pageTitle', 'leaders'));
     }

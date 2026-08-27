@@ -10,6 +10,7 @@
                             <th>@lang('Position')</th>
                             <th>@lang('Username')</th>
                             <th>@lang('Current Rank')</th>
+                            <th>@lang('Rank Matched BV')</th>
                             <th>@lang('Total Team BV')</th>
                             <th>@lang('Total Rank Reward')</th>
                         </tr>
@@ -20,6 +21,7 @@
                                 <td>{{ $leaders->firstItem() + $loop->index }}</td>
                                 <td><a href="{{ route('admin.users.detail', $leader->id) }}">{{ $leader->username }}</a></td>
                                 <td>{{ getCurrentRankName($leader) }}</td>
+                                <td>{{ getAmount($leader->rank_matched_bv) }}</td>
                                 <td>{{ getAmount($leader->total_team_dp) }}</td>
                                 <td>{{ showAmount($leader->total_rank_reward) }}</td>
                             </tr>
