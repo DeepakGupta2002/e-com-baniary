@@ -148,6 +148,15 @@ Route::middleware('auth')->name('user.')->group(function () {
             Route::controller('RankRewardController')->prefix('leaderboard')->name('leaderboard.')->group(function () {
                 Route::get('/', 'leaderboard')->name('index');
             });
+            Route::controller('FranchiseController')->prefix('franchise')->name('franchise.')->group(function () {
+                Route::get('apply', 'applyForm')->name('apply');
+                Route::post('apply', 'applyStore')->name('apply.store');
+                Route::get('dashboard', 'dashboard')->name('dashboard');
+                Route::get('transactions', 'transactions')->name('transactions');
+                Route::get('transfer', 'transferForm')->name('transfer');
+                Route::post('transfer', 'transferStore')->name('transfer.store');
+                Route::get('invoices', 'invoices')->name('invoices');
+            });
         });
 
         // Payment

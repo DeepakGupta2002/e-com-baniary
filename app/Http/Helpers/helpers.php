@@ -804,6 +804,22 @@ function getCurrentRankName($user)
     return $rank?->name ?? 'N/A';
 }
 
+function hasActiveFranchise($user = null)
+{
+    $user = $user ?: auth()->user();
+
+    return (bool) $user?->franchiseProfile
+        && $user->franchiseProfile->status === 'active'
+        && (float) $user->franchiseProfile->application_amount > 0;
+}
+
+function isActivePackageUser($user = null)
+{
+    $user = $user ?: auth()->user();
+
+    return (bool) $user && (int) $user->status === 1 && (int) $user->plan_id > 0;
+}
+
 function showSingleUserinTree($user)
 {
     $res = '';

@@ -46,6 +46,8 @@ class GeneralSettingController extends Controller
             'company_gstin' => 'nullable|string|max:40',
             'company_pan' => 'nullable|string|max:20',
             'invoice_prefix' => 'nullable|string|max:20',
+            'franchise_apply_amount' => 'required|numeric|gte:0',
+            'franchise_direct_commission' => 'required|numeric|gte:0|max:100',
         ]);
 
         $timezones = timezone_identifiers_list();
@@ -71,6 +73,8 @@ class GeneralSettingController extends Controller
         $general->company_gstin = $request->company_gstin;
         $general->company_pan = $request->company_pan;
         $general->invoice_prefix = $request->invoice_prefix ?: 'INV';
+        $general->franchise_apply_amount = $request->franchise_apply_amount;
+        $general->franchise_direct_commission = $request->franchise_direct_commission;
         $general->save();
 
         $timezoneFile = config_path('timezone.php');

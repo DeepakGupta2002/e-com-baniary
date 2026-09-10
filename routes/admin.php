@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\FranchiseController;
 use App\Http\Controllers\Admin\RankController;
 use Illuminate\Support\Facades\Route;
 
@@ -363,6 +364,17 @@ Route::middleware('admin')->group(function () {
         Route::post('status/{id}', 'status')->name('status');
         Route::get('logs', 'logs')->name('logs');
         Route::get('leaderboard', 'leaderboard')->name('leaderboard');
+    });
+
+    Route::controller(FranchiseController::class)->name('franchise.')->prefix('franchise')->group(function () {
+        Route::get('plans', 'plans')->name('plans');
+        Route::post('plans/store/{id?}', 'planStore')->name('plans.store');
+        Route::get('applications', 'applications')->name('applications');
+        Route::post('applications/{id}/approve', 'approve')->name('applications.approve');
+        Route::post('applications/{id}/reject', 'reject')->name('applications.reject');
+        Route::get('users', 'users')->name('users');
+        Route::get('invoices', 'invoices')->name('invoices');
+        Route::post('invoices', 'invoiceStore')->name('invoices.store');
     });
 
     //Category

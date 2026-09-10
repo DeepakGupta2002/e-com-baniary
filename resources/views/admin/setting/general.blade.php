@@ -132,6 +132,20 @@
                                 <label>@lang('Invoice Prefix')</label>
                                 <input class="form-control" name="invoice_prefix" type="text" value="{{ gs('invoice_prefix') ?: 'INV' }}">
                             </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Franchise Apply Amount')</label>
+                                <div class="input-group">
+                                    <input class="form-control" name="franchise_apply_amount" type="number" step="any" min="0" value="{{ getAmount(gs('franchise_apply_amount')) }}">
+                                    <span class="input-group-text">{{ gs('cur_text') }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>@lang('Franchise Direct Referral Commission')</label>
+                                <div class="input-group">
+                                    <input class="form-control" name="franchise_direct_commission" type="number" step="any" min="0" max="100" value="{{ getAmount(gs('franchise_direct_commission')) }}">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
                             <div class="form-group col-sm-12">
                                 <label>@lang('Company Address')</label>
                                 <textarea class="form-control" name="company_address" rows="3">{{ gs('company_address') }}</textarea>

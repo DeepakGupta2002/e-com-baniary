@@ -19,6 +19,20 @@
                         <li>
                             <a class="{{menuActive('user.home')}}" href="{{route('user.home')}}">@lang('Dasboard')</a>
                         </li>
+                        @if (isActivePackageUser() || hasActiveFranchise())
+                            <li>
+                                <a href="{{ route('user.franchise.apply') }}" class="{{menuActive('user.franchise.apply')}}">
+                                    @lang('Franchise Apply')
+                                </a>
+                            </li>
+                        @endif
+                        @if (hasActiveFranchise())
+                            <li>
+                                <a href="{{ route('user.franchise.dashboard') }}" class="{{menuActive('user.franchise.*')}}">
+                                    @lang('Franchise Panel')
+                                </a>
+                            </li>
+                        @endif
                         <li>
                             <a class="{{menuActive('user.plan.index')}}" href="{{route('user.plan.index')}}"> @lang('Plan') </a>
                         </li>

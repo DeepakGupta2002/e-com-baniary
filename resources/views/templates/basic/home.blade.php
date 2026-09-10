@@ -4,6 +4,7 @@
 @endphp
 @section('content')
     @include($activeTemplate . 'sections.banner')
+    @include($activeTemplate . 'sections.franchise_apply')
     @if (@$sections->secs != null)
         @foreach (json_decode($sections->secs) as $sec)
             @include($activeTemplate . 'sections.' . $sec)

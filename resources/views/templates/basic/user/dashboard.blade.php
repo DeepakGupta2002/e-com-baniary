@@ -221,6 +221,20 @@
                     <div class="dashboard-item">
                         <div class="dashboard-item-header">
                             <div class="header-left">
+                                <h6 class="title">@lang('Franchise Referral Commission')</h6>
+                                <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_franchise_com ?? 0) }}</h3>
+                                <small>@lang('Credited to main wallet after admin approval')</small>
+                            </div>
+                            <div class="icon"><i class="las la-store"></i></div>
+                        </div>
+                        <div class="dashboard-item-body">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+                    <div class="dashboard-item">
+                        <div class="dashboard-item-header">
+                            <div class="header-left">
                                 <h6 class="title">@lang('Total Binary Commission')</h6>
                                 <h3 class="ammount theme-one">{{ showAmount(auth()->user()->total_binary_com) }}</h3>
                                 <small>@lang('Left BV'): {{ getAmount($binaryMatchingStatus['left_bv']) }} | @lang('Right BV'): {{ getAmount($binaryMatchingStatus['right_bv']) }}</small><br>

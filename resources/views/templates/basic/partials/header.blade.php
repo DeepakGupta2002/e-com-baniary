@@ -26,6 +26,13 @@
                 <ul class="menu">
                     <li><a href="{{ route('home') }}">@lang('Home')</a></li>
                     <li><a href="{{ route('products') }}">@lang('Product')</a></li>
+                    @guest
+                        <li><a href="{{ route('franchise') }}">@lang('Franchise')</a></li>
+                    @else
+                        @if (isActivePackageUser() || hasActiveFranchise())
+                            <li><a href="{{ route('franchise') }}">@lang('Franchise')</a></li>
+                        @endif
+                    @endguest
 
                     @foreach ($pages as $k => $data)
                         <li><a href="{{ route('pages', [$data->slug]) }}">{{ $data->name }}</a></li>

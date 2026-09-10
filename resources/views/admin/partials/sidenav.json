@@ -78,6 +78,37 @@
             }
         ]
     },
+    "franchise": {
+        "title": "Franchise",
+        "icon": "las la-store",
+        "menu_active": "admin.franchise*",
+        "submenu": [
+            {
+                "keyword": ["Franchise Plans", "Franchise package", "Franchise amount"],
+                "title": "Plans",
+                "route_name": "admin.franchise.plans",
+                "menu_active": "admin.franchise.plans"
+            },
+            {
+                "keyword": ["Franchise Applications", "Franchise request", "Franchise approval"],
+                "title": "Applications",
+                "route_name": "admin.franchise.applications",
+                "menu_active": "admin.franchise.applications"
+            },
+            {
+                "keyword": ["Franchise Users", "Franchise accounts"],
+                "title": "Franchise Users",
+                "route_name": "admin.franchise.users",
+                "menu_active": "admin.franchise.users"
+            },
+            {
+                "keyword": ["Franchise Invoices", "Franchise billing"],
+                "title": "Franchise Invoices",
+                "route_name": "admin.franchise.invoices",
+                "menu_active": "admin.franchise.invoices"
+            }
+        ]
+    },
     "category": {
         "keyword": [
             "Category",

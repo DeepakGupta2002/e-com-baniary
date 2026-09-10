@@ -201,4 +201,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserAddress::class)->where('is_default', true);
     }
+
+    public function franchiseProfile()
+    {
+        return $this->hasOne(FranchiseProfile::class);
+    }
+
+    public function franchiseApplications()
+    {
+        return $this->hasMany(FranchiseApplication::class);
+    }
 }
