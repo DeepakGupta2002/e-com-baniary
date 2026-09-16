@@ -62,15 +62,24 @@
         <div class="container">
             <div class="footer-bottom-wrapper">
                 <p class="copy-text">&copy; @lang('All Right Reserved By') <a href="{{ route('home') }}">{{ __(gs('site_name')) }}</a></p>
-                <ul class="social-icons">
-                    @foreach ($socials as $social)
-                        <li>
-                            <a href="{{ @$social->data_values->url }}" title="{{ @$social->data_values->title }}" target="_blank">
-                                @php echo @$social->data_values->social_icon; @endphp
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
+                <div class="footer-actions">
+                    <a class="footer-app-download" href="{{ route('app.download') }}" download>
+                        <i class="fab fa-google-play"></i>
+                        <span>
+                            <small>@lang('Download')</small>
+                            @lang('Android App')
+                        </span>
+                    </a>
+                    <ul class="social-icons">
+                        @foreach ($socials as $social)
+                            <li>
+                                <a href="{{ @$social->data_values->url }}" title="{{ @$social->data_values->title }}" target="_blank">
+                                    @php echo @$social->data_values->social_icon; @endphp
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

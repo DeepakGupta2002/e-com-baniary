@@ -10,6 +10,14 @@ Route::get('/clear', function () {
 
 Route::get('cron', 'CronController@cron')->name('cron');
 
+Route::get('download-app', function () {
+    $apkPath = base_path('../assets/ORIVA_International.apk');
+
+    abort_unless(file_exists($apkPath), 404);
+
+    return response()->download($apkPath, 'ORIVA_International.apk');
+})->name('app.download');
+
 // User Support Ticket
 Route::controller('TicketController')->prefix('ticket')->name('ticket.')->group(function () {
     Route::get('/', 'supportTicket')->name('index');
