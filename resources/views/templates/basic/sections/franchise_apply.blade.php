@@ -60,6 +60,16 @@
             margin-bottom: 0;
         }
 
+        .franchise-apply-btn,
+        .franchise-apply-btn span {
+            color: #111;
+        }
+
+        .franchise-apply-btn:hover,
+        .franchise-apply-btn:hover span {
+            color: #fff;
+        }
+
         @media (max-width: 991px) {
             .franchise-offer-grid {
                 grid-template-columns: 1fr;
@@ -92,9 +102,9 @@
                                         <h2 class="text--base mb-2">{{ showAmount($lowestFranchiseAmount) }}</h2>
                                         <p class="mb-3">@lang('Starting franchise onboarding amount')</p>
                                         @auth
-                                            <a href="{{ route('user.franchise.apply') }}" class="cmn--btn-2 btn--md active"><span>@lang('Apply Now')</span></a>
+                                            <a href="{{ route('user.franchise.apply') }}" class="cmn--btn-2 btn--md active franchise-apply-btn"><span>@lang('Apply Now')</span></a>
                                         @else
-                                            <a href="{{ route('user.login') }}" class="cmn--btn-2 btn--md active"><span>@lang('Login To Apply')</span></a>
+                                            <a href="{{ route('user.login') }}" class="cmn--btn-2 btn--md active franchise-apply-btn"><span>@lang('Login To Apply')</span></a>
                                         @endauth
                                     </div>
                                 </div>

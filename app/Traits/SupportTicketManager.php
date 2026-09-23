@@ -435,11 +435,24 @@ trait SupportTicketManager
         $file = $attachment->attachment;
         $path = getFilePath('ticket');
         $fullPath = $path . '/' . $file;
+
+        if (!file_exists(public_path($fullPath)) || !is_file(public_path($fullPath))) {
+            if ($this->apiRequest) {
+                $notify[] = 'Attachment file not found';
+                return response()->json([
+                    'remark' => 'attachment_file_not_found',
+                    'status' => 'error',
+                    'message' => ['error' => $notify],
+                ]);
+            }
+            abort(404, 'Attachment file not found');
+        }
+
         $title = slug($attachment->supportMessage->ticket->subject);
         $ext = pathinfo($file, PATHINFO_EXTENSION);
-        $mimetype = mime_content_type($fullPath);
+        $mimetype = mime_content_type(public_path($fullPath));
         header('Content-Disposition: attachment; filename="' . $title . '.' . $ext . '";');
         header("Content-Type: " . $mimetype);
-        return readfile($fullPath);
+        return readfile(public_path($fullPath));
     }
 }

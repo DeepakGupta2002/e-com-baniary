@@ -8306,3 +8306,349 @@ label.required:after {
 .dropdown-menu__body::-webkit-scrollbar-thumb {
   background-color: rgb(7 18 81 / 40%);
 }
+
+/* ORIVA admin visual refresh */
+:root {
+  --oriva-admin-bg: #eef5f1;
+  --oriva-admin-surface: #ffffff;
+  --oriva-admin-surface-soft: #f7fbf8;
+  --oriva-admin-navy: #0f2f36;
+  --oriva-admin-green: #0f8f62;
+  --oriva-admin-green-dark: #076044;
+  --oriva-admin-gold: #c99428;
+  --oriva-admin-text: #17343b;
+  --oriva-admin-muted: #6c7f7c;
+  --oriva-admin-border: #dce8e2;
+  --oriva-admin-shadow: 0 18px 45px rgba(15, 47, 54, 0.09);
+  --oriva-admin-shadow-soft: 0 10px 24px rgba(15, 47, 54, 0.06);
+}
+
+body {
+  background:
+    radial-gradient(circle at top right, rgba(201, 148, 40, 0.14), transparent 26rem),
+    linear-gradient(135deg, #eef5f1 0%, #f8fbf8 45%, #eef6f4 100%);
+  color: var(--oriva-admin-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.page-title,
+.card-title {
+  color: var(--oriva-admin-navy);
+}
+
+.bg--dark {
+  background: linear-gradient(180deg, #09262d 0%, #0f3d3c 54%, #08242c 100%) !important;
+}
+
+.page-wrapper.default-version::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 14% 16%, rgba(15, 143, 98, 0.12), transparent 18rem),
+    radial-gradient(circle at 92% 8%, rgba(201, 148, 40, 0.15), transparent 20rem);
+  pointer-events: none;
+}
+
+.sidebar {
+  border-right: 0;
+  box-shadow: 18px 0 40px rgba(6, 35, 42, 0.18);
+}
+
+.sidebar__logo {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar__menu-wrapper {
+  padding: 10px 12px 16px;
+}
+
+.sidebar__menu .sidebar-menu-item {
+  margin-top: 6px;
+}
+
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item > a,
+.sidebar__menu .sidebar-menu-item > a {
+  border-left: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item .menu-icon,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item .menu-title {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item > a:hover,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item .side-menu--open,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item.active > a,
+.sidebar__menu .sidebar-menu-item .side-menu--open,
+.sidebar__menu .sidebar-menu-item.active > a {
+  background: linear-gradient(135deg, var(--oriva-admin-green) 0%, var(--oriva-admin-green-dark) 100%) !important;
+  box-shadow: 0 12px 26px rgba(15, 143, 98, 0.28);
+}
+
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item > a:hover .menu-icon,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item > a:hover .menu-title,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item .side-menu--open .menu-icon,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item .side-menu--open .menu-title,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item.active > a .menu-icon,
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-menu-item.active > a .menu-title {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.sidebar__menu .sidebar-submenu {
+  margin: 6px 0 8px 12px;
+  padding: 6px 0 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(201, 148, 40, 0.34);
+  border-radius: 0 12px 12px 0;
+}
+
+.sidebar__menu .sidebar-submenu .sidebar-menu-item a {
+  border-radius: 10px;
+  padding: 9px 14px;
+}
+
+.sidebar[class*='bg--'] .sidebar__menu .sidebar-submenu .sidebar-menu-item.active > a,
+.sidebar__menu .sidebar-submenu .sidebar-menu-item.active > a {
+  background: rgba(201, 148, 40, 0.18) !important;
+  box-shadow: none;
+}
+
+.sidebar__menu-header {
+  color: rgba(255, 255, 255, 0.48) !important;
+  margin: 24px 0 8px 14px;
+  letter-spacing: 1px;
+}
+
+.sidebar .version-info {
+  background: rgba(2, 22, 27, 0.82);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navbar-wrapper {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-bottom: 1px solid rgba(220, 232, 226, 0.85);
+  box-shadow: var(--oriva-admin-shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+.navbar-search .navbar-search-field {
+  background-color: #f5faf7;
+  border-color: var(--oriva-admin-border);
+  color: var(--oriva-admin-text);
+  border-radius: 999px;
+}
+
+.navbar-search .navbar-search-field::placeholder,
+.navbar-search .navbar-search-field::-moz-placeholder,
+.navbar-search .navbar-search-field::-webkit-input-placeholder {
+  color: var(--oriva-admin-muted);
+}
+
+.navbar-search .navbar-search-field:focus {
+  border-color: var(--oriva-admin-green);
+  box-shadow: 0 0 0 4px rgba(15, 143, 98, 0.12);
+}
+
+.navbar-search i,
+.navbar__right button i,
+.navbar-user__name {
+  color: var(--oriva-admin-navy) !important;
+  text-shadow: none;
+}
+
+.primary--layer,
+.navbar__right button {
+  border-radius: 999px;
+}
+
+.navbar__right button.primary--layer,
+.navbar__action-list > li > button {
+  width: 38px;
+  height: 38px;
+  background: #f5faf7;
+  border: 1px solid var(--oriva-admin-border);
+}
+
+.notification-count {
+  background: linear-gradient(135deg, #df4c30, #b8281b);
+  box-shadow: 0 5px 12px rgba(223, 76, 48, 0.26);
+}
+
+.body-wrapper {
+  background: transparent;
+}
+
+.bodywrapper__inner {
+  padding-top: 6px;
+}
+
+.breadcrumb-nav,
+.card,
+.widget,
+.widget-two,
+.widget-three,
+.widget-four,
+.widget-five,
+.widget-six,
+.widget-seven,
+.widget-eight,
+.widget-card,
+.widget-card-inner,
+.modal-content,
+.dropdown-menu,
+.form-control,
+.form-select,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  border-color: var(--oriva-admin-border) !important;
+}
+
+.card,
+.widget,
+.widget-two,
+.widget-three,
+.widget-four,
+.widget-five,
+.widget-seven,
+.widget-eight,
+.widget-card,
+.widget-card-inner,
+.modal-content {
+  background: var(--oriva-admin-surface);
+  border-radius: 18px;
+  box-shadow: var(--oriva-admin-shadow-soft);
+}
+
+.card {
+  border: 1px solid var(--oriva-admin-border);
+  overflow: hidden;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f9fcfa 0%, #edf7f2 100%);
+  border-bottom: 1px solid var(--oriva-admin-border);
+  color: var(--oriva-admin-navy);
+}
+
+.table {
+  color: var(--oriva-admin-text);
+}
+
+.table thead th {
+  background: #f2f8f5;
+  color: var(--oriva-admin-navy);
+  border-bottom-color: var(--oriva-admin-border) !important;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f9fcfa;
+}
+
+.btn--primary,
+.btn--base,
+.bg--primary,
+.badge--primary,
+.bg--primary-gradient {
+  background: linear-gradient(135deg, var(--oriva-admin-green) 0%, var(--oriva-admin-green-dark) 100%) !important;
+  border-color: var(--oriva-admin-green) !important;
+  color: #ffffff !important;
+}
+
+.btn--primary:hover,
+.btn--base:hover {
+  box-shadow: 0 12px 24px rgba(15, 143, 98, 0.22);
+  transform: translateY(-1px);
+}
+
+.btn-outline--primary {
+  border-color: var(--oriva-admin-green) !important;
+  color: var(--oriva-admin-green) !important;
+}
+
+.btn-outline--primary:hover {
+  background: var(--oriva-admin-green) !important;
+  color: #ffffff !important;
+}
+
+.text--primary,
+.page-breadcrumb li a,
+.dropdown-menu__footer .view-all-message:hover {
+  color: var(--oriva-admin-green) !important;
+}
+
+.bg--success,
+.badge--success {
+  background: linear-gradient(135deg, #0f8f62, #08734f) !important;
+}
+
+.bg--warning,
+.badge--warning {
+  background: linear-gradient(135deg, var(--oriva-admin-gold), #a86d13) !important;
+  color: #ffffff !important;
+}
+
+.bg--info,
+.badge--info {
+  background: linear-gradient(135deg, #287e91, #15576b) !important;
+}
+
+.form-control,
+.form-select,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  background-color: #fbfdfc;
+  border-radius: 12px !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+.select2-container--open .select2-selection.select2-selection--single,
+.select2-container--open .select2-selection.select2-selection--multiple {
+  border-color: var(--oriva-admin-green) !important;
+  box-shadow: 0 0 0 4px rgba(15, 143, 98, 0.12) !important;
+}
+
+.dropdown-menu {
+  border-radius: 16px;
+  box-shadow: var(--oriva-admin-shadow);
+}
+
+.dropdown-menu__header {
+  background: #f7fbf8;
+}
+
+.page-breadcrumb li,
+.text-muted,
+.text--small {
+  color: var(--oriva-admin-muted) !important;
+}
+
+.franchise-report-card {
+  border-color: var(--oriva-admin-border) !important;
+  box-shadow: var(--oriva-admin-shadow-soft) !important;
+}
+
+.franchise-report-icon {
+  background: linear-gradient(135deg, rgba(15, 143, 98, 0.13), rgba(201, 148, 40, 0.18)) !important;
+  color: var(--oriva-admin-green-dark) !important;
+}
+
+@media (max-width: 991px) {
+  .res-sidebar-open-btn {
+    color: var(--oriva-admin-navy);
+  }
+}

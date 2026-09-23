@@ -46,8 +46,18 @@ class FranchiseController extends Controller
     {
         $pageTitle = 'Franchise Applications';
         $applications = FranchiseApplication::with(['user', 'sponsor', 'plan'])->latest('id')->paginate(getPaginate());
+        $report = [
+            'total_applications' => FranchiseApplication::count(),
+            'pending_applications' => FranchiseApplication::where('status', 'pending')->count(),
+            'approved_applications' => FranchiseApplication::where('status', 'approved')->count(),
+            'rejected_applications' => FranchiseApplication::where('status', 'rejected')->count(),
+            'verified_payments' => FranchiseApplication::where('payment_status', 'verified')->count(),
+            'active_franchise_users' => FranchiseProfile::where('status', 'active')->where('application_amount', '>', 0)->count(),
+            'total_application_amount' => FranchiseApplication::sum('amount'),
+            'approved_application_amount' => FranchiseApplication::where('status', 'approved')->sum('amount'),
+        ];
 
-        return view('admin.franchise.applications', compact('pageTitle', 'applications'));
+        return view('admin.franchise.applications', compact('pageTitle', 'applications', 'report'));
     }
 
     public function approve($id, FranchiseService $franchiseService)

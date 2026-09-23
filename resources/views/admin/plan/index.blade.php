@@ -9,6 +9,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('Name')</th>
+                                    <th>@lang('Image')</th>
                                     <th>@lang('Price')</th>
                                     <th>@lang('Business Volume (BV)')</th>
                                     <th>@lang('Referral Commission (%)')</th>
@@ -24,6 +25,13 @@
                                     <tr>
 
                                         <td>{{ __($plan->name) }}</td>
+                                        <td>
+                                            @if ($plan->image)
+                                                <img src="{{ getImage(getFilePath('plan') . '/' . $plan->image, getFileSize('plan')) }}" alt="@lang('Plan Image')" class="rounded" width="70">
+                                            @else
+                                                <span class="text-muted">@lang('N/A')</span>
+                                            @endif
+                                        </td>
                                         <td>{{ showAmount($plan->price) }}</td>
                                         <td>{{ $plan->bv }}</td>
                                         <td> {{ getAmount($plan->ref_com) }}%</td>
@@ -75,13 +83,18 @@
                         <i class="las la-times"></i>
                     </button>
                 </div>
-                <form method="post" action="{{ route('admin.plan.store') }}">
+                <form method="post" action="{{ route('admin.plan.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="row">
                             <div class="form-group col-sm-12">
                                 <label class="font-weight-bold"> @lang('Name')</label>
                                 <input class="form-control" name="name" type="text" required>
+                            </div>
+                            <div class="form-group col-sm-12">
+                                <label class="font-weight-bold"> @lang('Plan Image')</label>
+                                <input class="form-control" name="image" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                                <small class="text-muted">@lang('Supported files: jpg, jpeg, png. Recommended size:') {{ getFileSize('plan') }}</small>
                             </div>
                             <div class="form-group col-sm-6">
                                 <label class="font-weight-bold"> @lang('Price') </label>

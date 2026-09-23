@@ -76,7 +76,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('user.franchise.apply.store') }}">
+            <form method="POST" action="{{ route('user.franchise.apply.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3 mb-4">
                     @forelse($plans as $plan)
@@ -109,6 +109,31 @@
                         <div class="form-group">
                             <label>@lang('Note')</label>
                             <textarea name="note" rows="4" class="form-control" placeholder="@lang('Add any note for admin')">{{ old('note') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>@lang('Payment Method')</label>
+                            <select name="payment_method" class="form-control" required>
+                                <option value="">@lang('Select One')</option>
+                                <option value="upi" @selected(old('payment_method') === 'upi')>@lang('UPI')</option>
+                                <option value="bank_transfer" @selected(old('payment_method') === 'bank_transfer')>@lang('Bank Transfer')</option>
+                                <option value="cash_deposit" @selected(old('payment_method') === 'cash_deposit')>@lang('Cash Deposit')</option>
+                                <option value="other" @selected(old('payment_method') === 'other')>@lang('Other')</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>@lang('UTR / Transaction No.')</label>
+                            <input type="text" name="payment_reference" class="form-control" value="{{ old('payment_reference') }}" placeholder="@lang('Enter UTR or transaction number')" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>@lang('Payment Screenshot / Proof')</label>
+                            <input type="file" name="payment_proof" class="form-control" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" required>
+                            <small class="text-muted">@lang('Allowed: jpg, jpeg, png, pdf')</small>
                         </div>
                     </div>
                 </div>

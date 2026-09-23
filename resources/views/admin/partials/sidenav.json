@@ -794,22 +794,6 @@
                 "title": "Cache",
                 "route_name": "admin.system.optimize",
                 "menu_active": "admin.system.optimize"
-            },
-            {
-                "keyword": [
-                    "Update",
-                    "System",
-                    "Update management",
-                    "System update",
-                    "Software updates",
-                    "version update",
-                    "upgrade",
-                    "latest version"
-                ],
-                "title": "Update",
-                "route_name": "admin.system.update",
-                "menu_active": "admin.system.update*",
-                "counter": "updateAvailable"
             }
         ]
     },

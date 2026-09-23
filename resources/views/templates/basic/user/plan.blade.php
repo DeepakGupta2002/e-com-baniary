@@ -4,9 +4,24 @@
     <div class="row">
         @foreach ($plans as $data)
             <div class="col-xl-4 col-md-4 mb-30 mb-4">
-                <div class="card custom--card">
+                <div class="card custom--card plan-subscription-card h-100">
                     <div class="card-body">
                         <div class="pricing-table mb-4 text-center">
+                            <div class="plan-image-card">
+                                @if ($data->image)
+                                    <button class="plan-image-preview-btn" type="button" data-image="{{ getImage(getFilePath('plan') . '/' . $data->image, getFileSize('plan')) }}" data-title="{{ __($data->name) }}">
+                                        <img src="{{ getImage(getFilePath('plan') . '/' . $data->image, getFileSize('plan')) }}" alt="{{ __($data->name) }}">
+                                    </button>
+                                @else
+                                    <div class="plan-image-placeholder">
+                                        <i class="las la-gem"></i>
+                                    </div>
+                                @endif
+                                <div class="plan-image-content">
+                                    <span>@lang('ORIVA Plan')</span>
+                                    <strong>{{ showAmount($data->price) }}</strong>
+                                </div>
+                            </div>
                             <h2 class="package-name text- mb-20"><strong>{{ __(strtoupper($data->name)) }}</strong></h2>
                             <span class="price text--dark font-weight-bold d-block">{{ showAmount($data->price) }}</span>
                             <hr>
@@ -54,7 +69,117 @@
     </div>
 @endsection
 
+@push('style')
+    <style>
+        .plan-subscription-card {
+            overflow: hidden;
+        }
+
+        .plan-image-card {
+            position: relative;
+            min-height: 180px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 22px;
+            background: linear-gradient(135deg, rgba(31, 94, 45, 0.16), rgba(182, 122, 18, 0.18));
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+        }
+
+        .plan-image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            image-rendering: auto;
+        }
+
+        .plan-image-preview-btn {
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: zoom-in;
+        }
+
+        .plan-image-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.62));
+            pointer-events: none;
+        }
+
+        .plan-image-placeholder {
+            min-height: 180px;
+            display: grid;
+            place-items: center;
+            color: hsl(var(--base));
+            font-size: 64px;
+        }
+
+        .plan-image-content {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 16px;
+            z-index: 1;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 12px;
+            color: #fff;
+            text-align: left;
+        }
+
+        .plan-image-content span {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            opacity: .9;
+        }
+
+        .plan-image-content strong {
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 575px) {
+            .plan-image-card,
+            .plan-image-card img,
+            .plan-image-placeholder {
+                min-height: 160px;
+                height: 160px;
+            }
+        }
+
+        .plan-preview-modal-image {
+            width: 100%;
+            max-height: 75vh;
+            object-fit: contain;
+            border-radius: 14px;
+        }
+    </style>
+@endpush
+
 @push('modal')
+    <div class="modal fade" id="plan_image_modal" role="dialog" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button class="close" data-bs-dismiss="modal" type="button" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <img class="plan-preview-modal-image" src="" alt="@lang('Plan Image')">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="plan_info_modal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -140,6 +265,13 @@
                 $('#plan_id').attr('value', id);
                 $("#subscribe_modal").modal('show');
             })
+
+            $('.plan-image-preview-btn').on('click', function() {
+                let modal = $('#plan_image_modal');
+                modal.find('.modal-title').text($(this).data('title'));
+                modal.find('.plan-preview-modal-image').attr('src', $(this).data('image'));
+                modal.modal('show');
+            });
         })(jQuery)
     </script>
 @endpush

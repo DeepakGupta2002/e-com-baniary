@@ -41,6 +41,9 @@ class FranchiseService
             $profile->save();
 
             $application->status = 'approved';
+            $application->payment_status = 'verified';
+            $application->payment_verified_at = now();
+            $application->payment_verified_by = auth()->guard('admin')->id();
             $application->approved_at = now();
             $application->save();
 
@@ -57,6 +60,7 @@ class FranchiseService
     public function rejectApplication(FranchiseApplication $application, ?string $note = null): void
     {
         $application->status = 'rejected';
+        $application->payment_status = 'rejected';
         $application->note = $note;
         $application->save();
     }

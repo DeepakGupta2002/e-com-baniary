@@ -23,6 +23,11 @@
                 <div class="plan-item">
                     <span class="plan-serial">{{ $k+1 }}</span>
                     <div class="plan-bottom">
+                        @if ($plan->image)
+                            <div class="px-3 pt-3">
+                                <img src="{{ getImage(getFilePath('plan') . '/' . $plan->image, getFileSize('plan')) }}" alt="{{ __($plan->name) }}" class="rounded w-100">
+                            </div>
+                        @endif
                         <div class="plan-header"><div class="plan-price"><sup>{{gs('cur_sym')}}</sup>{{showAmount($plan->price,currencyFormat:false)}}</div></div>
                         <div class="plan-body">
                             <p class="plan-name">{{ __(@$plan->name) }}</p>

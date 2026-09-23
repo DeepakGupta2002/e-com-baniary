@@ -84,6 +84,13 @@ class FileInfo
         'size' => '530x590',
         'thumb' => '270x300'
     ];
+        $data['plan'] = [
+            'path' => 'assets/images/plans',
+            'size' => '1200x740',
+        ];
+        $data['franchisePaymentProof'] = [
+            'path' => 'assets/images/franchise/payment_proofs',
+        ];
         return $data;
 	}
 

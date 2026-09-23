@@ -9,6 +9,7 @@ use App\Models\FranchisePlan;
 use App\Models\FranchiseProfile;
 use App\Models\FranchiseTransaction;
 use App\Models\User;
+use App\Rules\FileTypeValidate;
 use App\Services\FranchiseService;
 use Illuminate\Http\Request;
 
@@ -54,6 +55,9 @@ class FranchiseController extends Controller
         $request->validate([
             'franchise_plan_id' => 'required|exists:franchise_plans,id',
             'sponsor' => 'nullable|string',
+            'payment_method' => 'required|string|in:upi,bank_transfer,cash_deposit,other',
+            'payment_reference' => 'required|string|max:100',
+            'payment_proof' => ['required', 'file', new FileTypeValidate(['jpg', 'jpeg', 'png', 'pdf'])],
             'note' => 'nullable|string|max:1000',
         ]);
 
@@ -93,11 +97,22 @@ class FranchiseController extends Controller
             return back()->withNotify($notify);
         }
 
+        try {
+            $paymentProof = fileUploader($request->payment_proof, getFilePath('franchisePaymentProof'));
+        } catch (\Exception $exp) {
+            $notify[] = ['error', 'Couldn\'t upload payment proof'];
+            return back()->withNotify($notify);
+        }
+
         FranchiseApplication::create([
             'user_id' => $user->id,
             'sponsor_user_id' => $sponsor?->id,
             'franchise_plan_id' => $plan->id,
             'amount' => $plan->amount,
+            'payment_method' => $request->payment_method,
+            'payment_reference' => $request->payment_reference,
+            'payment_proof' => $paymentProof,
+            'payment_status' => 'pending_verification',
             'note' => $request->note,
             'status' => 'pending',
         ]);
