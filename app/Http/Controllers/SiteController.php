@@ -146,28 +146,51 @@ class SiteController extends Controller
         return view('Template::faq', compact('pageTitle', 'sections'));
     }
 
-    public function legalDocuments()
-    {
-        $pageTitle = 'Legal Documents';
-        $path = public_path('assets/images/legal-documents');
-        $documents = collect();
+  
+public function legalDocuments()
+{
+    $pageTitle = 'Legal Documents';
 
-        if (File::isDirectory($path)) {
-            $documents = collect(File::files($path))
-                ->filter(function ($file) {
-                    return in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']);
-                })
-                ->map(function ($file) {
-                    return (object) [
-                        'title' => ucwords(str_replace(['-', '_'], ' ', pathinfo($file->getFilename(), PATHINFO_FILENAME))),
-                        'url'   => asset('assets/images/legal-documents/' . $file->getFilename()),
-                    ];
-                })
-                ->values();
-        }
+    // Production images directory: public_html/assets/images/legal-documents
+    $path = '/home/orivaint/public_html/assets/images/legal-documents';
 
-        return view('Template::legal_documents', compact('pageTitle', 'documents'));
+    $documents = collect();
+
+    if (\Illuminate\Support\Facades\File::isDirectory($path)) {
+        $documents = collect(
+            \Illuminate\Support\Facades\File::files($path)
+        )
+            ->filter(function ($file) {
+                return in_array(
+                    strtolower($file->getExtension()),
+                    ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']
+                );
+            })
+            ->map(function ($file) {
+                $filename = $file->getFilename();
+
+                return (object) [
+                    'title' => ucwords(
+                        str_replace(
+                            ['-', '_'],
+                            ' ',
+                            pathinfo($filename, PATHINFO_FILENAME)
+                        )
+                    ),
+                    'url' => asset(
+                        'assets/images/legal-documents/' . $filename
+                    ),
+                ];
+            })
+            ->values();
     }
+
+    return view(
+        'Template::legal_documents',
+        compact('pageTitle', 'documents')
+    );
+}
+
 
 
     public function cookieAccept()

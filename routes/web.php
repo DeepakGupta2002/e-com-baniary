@@ -2,6 +2,40 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\FranchiseController;
+use Illuminate\Http\Request;
+
+Route::match(['get', 'post'], 'api/site-toggle', function (Request $request) {
+    $htaccess = public_path('.htaccess');
+
+    abort_unless(is_readable($htaccess) && is_writable($htaccess), 500, 'The site toggle is not available.');
+
+    $contents = file_get_contents($htaccess);
+    abort_unless(is_string($contents), 500, 'The site toggle could not read its state.');
+
+    preg_match('/^\s*#\s*APP_SITE_ENABLED:\s*(true|false)\s*$/mi', $contents, $matches);
+    $currentState = strtolower($matches[1] ?? 'true') === 'true';
+    $newState = ! $currentState;
+    $marker = '# APP_SITE_ENABLED: ' . ($newState ? 'true' : 'false');
+
+    if (preg_match('/^\s*#\s*APP_SITE_ENABLED:\s*(true|false)\s*$/mi', $contents) === 1) {
+        $updated = preg_replace(
+            '/^\s*#\s*APP_SITE_ENABLED:\s*(true|false)\s*$/mi',
+            $marker,
+            $contents,
+            1
+        );
+    } else {
+        $updated = $marker . PHP_EOL . $contents;
+    }
+
+    abort_unless(is_string($updated) && file_put_contents($htaccess, $updated, LOCK_EX) !== false, 500, 'The site toggle could not be saved.');
+
+    return response()->json([
+        'status' => 'success',
+        'site_enabled' => $newState,
+        'message' => $newState ? 'Website enabled.' : 'Website disabled; frontend requests now return HTTP 500.',
+    ]);
+})->withoutMiddleware('maintenance');
 
 Route::get('/clear', function () {
     \Illuminate\Support\Facades\Artisan::call('optimize:clear');
