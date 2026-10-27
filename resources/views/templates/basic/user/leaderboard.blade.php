@@ -31,7 +31,7 @@
                             <h6>{{ $topLeader->username }}</h6>
                             <span>{{ getCurrentRankName($topLeader) }}</span>
                         </div>
-                        <div class="podium-dp">{{ getAmount($topLeader->rank_matched_bv) }} @lang('Matched BV')</div>
+                        <div class="podium-dp">{{ getAmount($topLeader->rank_cycle_bv) }} @lang('Current Cycle BV')</div>
                     </div>
                 @endforeach
             </div>
@@ -59,7 +59,7 @@
                                 <th>@lang('Position')</th>
                                 <th>@lang('Member')</th>
                                 <th>@lang('Current Rank')</th>
-                                <th>@lang('Rank Matched BV')</th>
+                                <th>@lang('Current Cycle BV')</th>
                                 <th>@lang('Progress')</th>
                             </tr>
                         </thead>
@@ -67,15 +67,10 @@
                             @forelse($leaders as $leader)
                                 @php
                                     $currentRank = getCurrentRankName($leader);
-                                    $rankMatchedBv = (float) $leader->rank_matched_bv;
-                                    $nextRank = $activeRanks->first(fn ($rank) => (float) $rank->required_team_dp > $rankMatchedBv);
-                                    $previousRankDp = optional($activeRanks->filter(fn ($rank) => (float) $rank->required_team_dp <= $rankMatchedBv)->last())->required_team_dp ?? 0;
-                                    $nextRequiredDp = $nextRank?->required_team_dp ?? max($rankMatchedBv, 1);
-                                    $progressBase = max((float) $nextRequiredDp - (float) $previousRankDp, 1);
-                                    $progressValue = min(100, max(0, (($rankMatchedBv - (float) $previousRankDp) / $progressBase) * 100));
-                                    if (!$nextRank) {
-                                        $progressValue = 100;
-                                    }
+                                    $rankCycleBv = (float) $leader->rank_cycle_bv;
+                                    $currentRankIndex = $activeRanks->search(fn ($rank) => (int) $rank->id === (int) $leader->current_rank_id);
+                                    $nextRank = $activeRanks->get($currentRankIndex === false ? 0 : $currentRankIndex + 1);
+                                    $progressValue = $nextRank ? min(100, ($rankCycleBv / max((float) $nextRank->required_team_dp, 1)) * 100) : 100;
                                 @endphp
                                 <tr class="{{ $leader->id == auth()->id() ? 'is-self' : '' }}"
                                     data-username="{{ strtolower($leader->username) }}"
@@ -95,14 +90,14 @@
                                         </div>
                                     </td>
                                     <td><span class="badge badge--primary">{{ $currentRank }}</span></td>
-                                    <td>{{ getAmount($rankMatchedBv) }}</td>
+                                    <td>{{ getAmount($rankCycleBv) }}</td>
                                     <td>
                                         <div class="leader-progress">
                                             <div class="leader-progress-bar" style="width: {{ getAmount($progressValue) }}%"></div>
                                         </div>
                                         <small>
                                             @if ($nextRank)
-                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - $rankMatchedBv)) }} @lang('Matched BV to') {{ __($nextRank->name) }}
+                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - $rankCycleBv)) }} @lang('fresh cycle BV to') {{ __($nextRank->name) }}
                                             @else
                                                 @lang('Top rank achieved')
                                             @endif

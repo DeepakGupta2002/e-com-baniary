@@ -358,8 +358,8 @@
                     <div class="dashboard-item">
                         <div class="dashboard-item-header">
                             <div class="header-left">
-                                <h6 class="title">@lang('Rank Matched BV')</h6>
-                                <h3 class="ammount theme-one">{{ getAmount($rankMatchedBv) }}</h3>
+                                <h6 class="title">@lang('Current Rank Cycle BV')</h6>
+                                <h3 class="ammount theme-one">{{ getAmount($rankCycleMatchedBv) }}</h3>
                                 <small>@lang('Total Team BV'): {{ getAmount(auth()->user()->total_team_dp) }}</small>
                             </div>
                             <div class="icon"><i class="las la-sitemap"></i></div>
@@ -386,7 +386,7 @@
                     <div class="card custom--card">
                         <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
                             <h5 class="mb-0">@lang('Rank Reward Roadmap')</h5>
-                            <span class="badge badge--info">@lang('Your Matched BV'): {{ getAmount($rankMatchedBv) }}</span>
+                            <span class="badge badge--info">@lang('Current Cycle Matched BV'): {{ getAmount($rankCycleMatchedBv) }}</span>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -394,19 +394,18 @@
                                     <thead>
                                         <tr>
                                             <th>@lang('Rank')</th>
-                                            <th>@lang('Required Matched BV')</th>
+                                            <th>@lang('Fresh Cycle BV Required')</th>
                                             <th>@lang('Reward')</th>
                                             <th>@lang('Status')</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @php
-                                            $teamDp = (float) $rankMatchedBv;
                                             $currentRankShown = false;
                                         @endphp
                                         @forelse($ranks as $rank)
                                             @php
-                                                $isAchieved = $teamDp >= (float) $rank->required_team_dp;
+                                                $isAchieved = in_array($rank->id, $achievedRankIds);
                                                 $isCurrent = !$isAchieved && !$currentRankShown;
                                                 if ($isCurrent) {
                                                     $currentRankShown = true;

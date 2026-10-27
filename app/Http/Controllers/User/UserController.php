@@ -10,6 +10,7 @@ use App\Models\Rank;
 use App\Models\Deposit;
 use App\Models\Product;
 use App\Models\LeaderGrowthBonusLog;
+use App\Models\RankRewardLog;
 use App\Constants\Status;
 use App\Lib\FormProcessor;
 use App\Models\Withdrawal;
@@ -47,9 +48,10 @@ class UserController extends Controller
         $user = auth()->user();
         $fastStartWindow = $this->fastStartWindow($user);
         $binaryMatchingStatus = $this->binaryMatchingStatus($user);
-        $rankMatchedBv = app(RankRewardService::class)->matchedRankBv($user->id);
+        $rankCycleMatchedBv = app(RankRewardService::class)->currentCycleMatchedBv($user->id);
+        $achievedRankIds = RankRewardLog::where('user_id', $user->id)->pluck('rank_id')->all();
 
-        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus', 'rankMatchedBv'));
+        return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus', 'rankCycleMatchedBv', 'achievedRankIds'));
     }
 
     private function fastStartWindow(User $user): array

@@ -10,7 +10,7 @@
                             <th>@lang('Date')</th>
                             <th>@lang('User')</th>
                             <th>@lang('Rank')</th>
-                            <th>@lang('Matched BV')</th>
+                            <th>@lang('Qualifying Cycle BV')</th>
                             <th>@lang('Reward')</th>
                             <th>@lang('Transaction')</th>
                             <th>@lang('Status')</th>

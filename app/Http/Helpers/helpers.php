@@ -563,9 +563,11 @@ function updateBV($id, $bv, $details)
                 if ($position == 1) {
                     $extra->bv_left  += $bv;
                     $bvLog->position  = '1';
+                    $posUser->rank_cycle_left_bv = getAmount((float) $posUser->rank_cycle_left_bv + $bv, 8);
                 } else {
                     $extra->bv_right += $bv;
                     $bvLog->position  = '2';
+                    $posUser->rank_cycle_right_bv = getAmount((float) $posUser->rank_cycle_right_bv + $bv, 8);
                 }
                 $extra->save();
                 $bvLog->amount   = $bv;

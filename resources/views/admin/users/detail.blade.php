@@ -32,7 +32,7 @@
                     <x-widget type="2" value="{{ getCurrentRankName($user) }}" title="Current Rank" style="7" link="{{ route('admin.rank.logs') }}?search={{ $user->username }}" icon="las la-award" bg="5" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
-                    <x-widget type="2" value="{{ getAmount(app(\App\Services\RankRewardService::class)->matchedRankBv($user->id)) }}" title="Rank Matched BV" style="7" link="{{ route('admin.rank.leaderboard') }}" icon="las la-sitemap" bg="10" />
+                    <x-widget type="2" value="{{ getAmount(app(\App\Services\RankRewardService::class)->currentCycleMatchedBv($user->id)) }}" title="Current Rank Cycle BV" style="7" link="{{ route('admin.rank.leaderboard') }}" icon="las la-sitemap" bg="10" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
                     <x-widget type="2" value="{{ showAmount($user->total_rank_reward) }}" title="Total Rank Reward" style="7" link="{{ route('admin.rank.logs') }}?search={{ $user->username }}" icon="las la-trophy" bg="9" />

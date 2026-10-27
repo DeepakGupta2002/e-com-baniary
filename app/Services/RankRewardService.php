@@ -12,37 +12,28 @@ class RankRewardService
 {
     public function checkRankReward(User $user): void
     {
-        $user = User::with('currentRank')->lockForUpdate()->findOrFail($user->id);
-        $matchedRankBv = $this->matchedRankBv($user->id);
-
-        $eligibleRanks = Rank::where('status', 1)
-            ->where('required_team_dp', '<=', $matchedRankBv)
+        $user = User::lockForUpdate()->findOrFail($user->id);
+        $nextRank = Rank::where('status', 1)
             ->orderBy('required_team_dp')
             ->orderBy('sort_order')
             ->lockForUpdate()
-            ->get();
+            ->get()
+            ->first(fn (Rank $rank) => !$this->alreadyRewarded($user->id, $rank->id));
 
-        $currentRankId = null;
-        foreach ($eligibleRanks as $rank) {
-            $currentRankId = $rank->id;
-
-            if ($this->alreadyRewarded($user->id, $rank->id)) {
-                $user->current_rank_id = $rank->id;
-                $user->save();
-                continue;
-            }
-
-            $this->creditRankReward($user, $rank);
-            $user->refresh();
+        if (!$nextRank) {
+            return;
         }
 
-        if ($user->current_rank_id !== $currentRankId) {
-            $user->current_rank_id = $currentRankId;
-            $user->save();
+        $cycleMatchedBv = $this->currentCycleMatchedBv($user->id);
+
+        if ($cycleMatchedBv < (float) $nextRank->required_team_dp) {
+            return;
         }
+
+        $this->creditRankReward($user, $nextRank, $cycleMatchedBv);
     }
 
-    private function creditRankReward(User $user, Rank $rank): void
+    private function creditRankReward(User $user, Rank $rank, float $cycleMatchedBv): void
     {
         if ($this->alreadyRewarded($user->id, $rank->id)) {
             return;
@@ -69,11 +60,15 @@ class RankRewardService
         RankRewardLog::create([
             'user_id' => $user->id,
             'rank_id' => $rank->id,
-            'team_dp' => getAmount($this->matchedRankBv($user->id), 8),
+            'team_dp' => getAmount($cycleMatchedBv, 8),
             'reward_amount' => $rewardAmount,
             'transaction_id' => $transaction->id,
             'status' => 'paid',
         ]);
+
+        $user->rank_cycle_left_bv = 0;
+        $user->rank_cycle_right_bv = 0;
+        $user->save();
 
         notify($user, 'DEFAULT', [
             'subject' => 'Rank Reward Credited',
@@ -94,5 +89,16 @@ class RankRewardService
         $rightBv = BvLog::where('user_id', $userId)->rightBV()->sum('amount');
 
         return getAmount(min((float) $leftBv, (float) $rightBv), 8);
+    }
+
+    public function currentCycleMatchedBv(int $userId): float
+    {
+        $user = User::find($userId, ['rank_cycle_left_bv', 'rank_cycle_right_bv']);
+
+        if (!$user) {
+            return 0;
+        }
+
+        return getAmount(min((float) $user->rank_cycle_left_bv, (float) $user->rank_cycle_right_bv), 8);
     }
 }

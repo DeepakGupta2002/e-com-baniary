@@ -21,9 +21,9 @@ class RankRewardController extends Controller
             ->dateFilter()
             ->latest('id')
             ->paginate(getPaginate());
-        $rankMatchedBv = app(RankRewardService::class)->matchedRankBv(auth()->id());
+        $rankCycleMatchedBv = app(RankRewardService::class)->currentCycleMatchedBv(auth()->id());
 
-        return view(activeTemplate() . 'user.rank_reward', compact('pageTitle', 'logs', 'rankMatchedBv'));
+        return view(activeTemplate() . 'user.rank_reward', compact('pageTitle', 'logs', 'rankCycleMatchedBv'));
     }
 
     public function leaderboard()
@@ -36,12 +36,12 @@ class RankRewardController extends Controller
             ->where('total_team_dp', '>', 0)
             ->get()
             ->map(function (User $leader) use ($rankRewardService) {
-                $leader->rank_matched_bv = $rankRewardService->matchedRankBv($leader->id);
+                $leader->rank_cycle_bv = $rankRewardService->currentCycleMatchedBv($leader->id);
                 return $leader;
             })
-            ->filter(fn (User $leader) => (float) $leader->rank_matched_bv > 0)
+            ->filter(fn (User $leader) => (float) $leader->total_team_dp > 0)
             ->sortBy([
-                ['rank_matched_bv', 'desc'],
+                ['rank_cycle_bv', 'desc'],
                 ['id', 'asc'],
             ])
             ->values();
