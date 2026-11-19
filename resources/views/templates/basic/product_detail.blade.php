@@ -42,6 +42,11 @@
                         <div class="product-price">
                             <span class="current-price">{{ showAmount($product->price) }}</span>
                         </div>
+                        <div class="product-bv product-bv--detail" title="@lang('Business Volume')">
+                            <i class="las la-chart-line"></i>
+                            <span>@lang('Business Volume'):</span>
+                            <strong>{{ getAmount($product->bv) }} BV</strong>
+                        </div>
                         @if ($product->quantity > 0)
                             <span class="custom--badge bg--success mt-3">@lang('In Stock')</span>
                         @else
@@ -176,6 +181,11 @@
 
                                 <div class="product-price">
                                     <span class="current-price">{{ showAmount($relatedProduct->price) }}</span>
+                                </div>
+                                <div class="product-bv" title="@lang('Business Volume')">
+                                    <i class="las la-chart-line"></i>
+                                    <span>@lang('Business Volume'):</span>
+                                    <strong>{{ getAmount($relatedProduct->bv) }} BV</strong>
                                 </div>
                                 <a class="add-to-cart cmn--btn-2"
                                     href="{{ route('product.details', ['id' => $relatedProduct->id, 'slug' => slug($relatedProduct->name)]) }}">@lang('Details')</a>

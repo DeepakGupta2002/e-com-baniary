@@ -630,6 +630,8 @@ class OrivaCompensationEngineTest extends TestCase
 
         $this->purchasePlan($sponsor, 3, (float) $plan->price);
         $this->purchasePlan($leftChild, 3, (float) $plan->price);
+        updateBV($leftChild->id, 1000, 'Additional left cycle BV');
+        updateBV($rightChild->id, 1000, 'Additional right cycle BV');
         $this->purchasePlan($rightChild, 3, (float) $plan->price);
 
         $sponsor->refresh();
@@ -645,15 +647,15 @@ class OrivaCompensationEngineTest extends TestCase
 
         $this->assertNotNull($transaction, 'Rank reward transaction missing.');
         $this->assertNotNull($log, 'Rank reward log missing.');
-        $this->assertEquals(5000.0, (float) $sponsor->total_team_dp);
+        $this->assertEquals(7000.0, (float) $sponsor->total_team_dp);
         $this->assertEquals(321.25, (float) $sponsor->total_rank_reward);
         $this->assertEquals(821.25, (float) $sponsor->balance);
         $this->assertSame($rank->id, $sponsor->current_rank_id);
         $this->assertEquals(321.25, (float) $transaction->amount);
         $this->assertEquals(321.25, (float) $log->reward_amount);
         $this->assertSame('paid', $log->status);
-        $this->assertEquals(0.0, (float) $sponsor->rank_cycle_left_bv);
-        $this->assertEquals(0.0, (float) $sponsor->rank_cycle_right_bv);
+        $this->assertEquals(1000.0, (float) $sponsor->rank_cycle_left_bv);
+        $this->assertEquals(1000.0, (float) $sponsor->rank_cycle_right_bv);
     }
 
     public function test_rank_reward_is_not_credited_twice_for_same_rank(): void

@@ -49,7 +49,10 @@ class UserController extends Controller
         $fastStartWindow = $this->fastStartWindow($user);
         $binaryMatchingStatus = $this->binaryMatchingStatus($user);
         $rankCycleMatchedBv = app(RankRewardService::class)->currentCycleMatchedBv($user->id);
-        $achievedRankIds = RankRewardLog::where('user_id', $user->id)->pluck('rank_id')->all();
+        $achievedRankIds = RankRewardLog::where('user_id', $user->id)
+            ->where('status', 'paid')
+            ->pluck('rank_id')
+            ->all();
 
         return view('Template::user.dashboard', compact('pageTitle', 'totalDeposit', 'totalWithdraw', 'completeWithdraw', 'pendingWithdraw', 'totalRef', 'totalBvCut', 'ranks', 'pendingLeaderGrowthBonus', 'fastStartWindow', 'binaryMatchingStatus', 'rankCycleMatchedBv', 'achievedRankIds'));
     }

@@ -796,12 +796,18 @@ function getCurrentRankName($user)
         return 'N/A';
     }
 
-    $matchedRankBv = app(\App\Services\RankRewardService::class)->matchedRankBv($user->id);
-    $rank = \App\Models\Rank::where('status', 1)
-        ->where('required_team_dp', '<=', $matchedRankBv)
-        ->orderByDesc('required_team_dp')
-        ->orderByDesc('sort_order')
-        ->first();
+    $rankId = $user->current_rank_id;
+
+    if (!$rankId) {
+        $rankId = \App\Models\RankRewardLog::where('user_id', $user->id)
+            ->where('status', 'paid')
+            ->latest('id')
+            ->value('rank_id');
+    }
+
+    $rank = $rankId
+        ? \App\Models\Rank::where('status', 1)->find($rankId)
+        : null;
 
     return $rank?->name ?? 'N/A';
 }

@@ -60,6 +60,8 @@
                                 <th>@lang('Member')</th>
                                 <th>@lang('Current Rank')</th>
                                 <th>@lang('Current Cycle BV')</th>
+                                <th>@lang('Next Rank')</th>
+                                <th>@lang('Remaining BV')</th>
                                 <th>@lang('Progress')</th>
                             </tr>
                         </thead>
@@ -70,6 +72,7 @@
                                     $rankCycleBv = (float) $leader->rank_cycle_bv;
                                     $currentRankIndex = $activeRanks->search(fn ($rank) => (int) $rank->id === (int) $leader->current_rank_id);
                                     $nextRank = $activeRanks->get($currentRankIndex === false ? 0 : $currentRankIndex + 1);
+                                    $remainingBv = $nextRank ? max(0, (float) $nextRank->required_team_dp - $rankCycleBv) : 0;
                                     $progressValue = $nextRank ? min(100, ($rankCycleBv / max((float) $nextRank->required_team_dp, 1)) * 100) : 100;
                                 @endphp
                                 <tr class="{{ $leader->id == auth()->id() ? 'is-self' : '' }}"
@@ -92,12 +95,20 @@
                                     <td><span class="badge badge--primary">{{ $currentRank }}</span></td>
                                     <td>{{ getAmount($rankCycleBv) }}</td>
                                     <td>
+                                        @if ($nextRank)
+                                            <span class="badge badge--info">{{ __($nextRank->name) }}</span>
+                                        @else
+                                            <span class="badge badge--success">@lang('Top Rank')</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $nextRank ? getAmount($remainingBv) : '-' }}</td>
+                                    <td>
                                         <div class="leader-progress">
                                             <div class="leader-progress-bar" style="width: {{ getAmount($progressValue) }}%"></div>
                                         </div>
                                         <small>
                                             @if ($nextRank)
-                                                {{ getAmount(max(0, (float) $nextRank->required_team_dp - $rankCycleBv)) }} @lang('fresh cycle BV to') {{ __($nextRank->name) }}
+                                                {{ getAmount($progressValue) }}% @lang('complete in current cycle')
                                             @else
                                                 @lang('Top rank achieved')
                                             @endif

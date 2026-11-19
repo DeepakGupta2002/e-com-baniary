@@ -43,6 +43,11 @@
                                 <div class="product-price">
                                     <span class="current-price">{{ showAmount($product->price) }}</span>
                                 </div>
+                                <div class="product-bv" title="@lang('Business Volume')">
+                                    <i class="las la-chart-line"></i>
+                                    <span>@lang('Business Volume'):</span>
+                                    <strong>{{ getAmount($product->bv) }} BV</strong>
+                                </div>
                                 <a class="add-to-cart cmn--btn-2"
                                     href="{{ route('product.details', ['id' => $product->id, 'slug' => slug($product->name)]) }}">@lang('Details')</a>
                             </div>
