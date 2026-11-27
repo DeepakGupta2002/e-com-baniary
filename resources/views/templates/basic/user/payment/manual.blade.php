@@ -11,6 +11,12 @@
                     </p>
                 </div>
 
+                <div class="text-center mb-4">
+                    <p class="fw-bold mb-2">@lang('Scan QR code to make payment')</p>
+                    <img src="{{ asset('assets/image.png') }}" alt="@lang('Payment QR code')"
+                        class="img-fluid rounded border p-2" style="max-width: 420px; width: 100%;">
+                </div>
+
                 <div class="mb-3">@php echo  $data->gateway->description @endphp</div>
 
                 <x-viser-form identifier="id" identifierValue="{{ $gateway->form_id }}" />
